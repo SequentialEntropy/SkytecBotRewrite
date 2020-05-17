@@ -39,7 +39,7 @@ class MainBot:
         @self.bot.command()
         @commands.has_any_role(staffrole)
         async def status(ctx, statustype, *args, **kwargs):
-            message = "".join([arg for arg in args])
+            message = " ".join([arg for arg in args])
             if statustype == "playing":
                 await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.playing))
             elif statustype == "watching":
