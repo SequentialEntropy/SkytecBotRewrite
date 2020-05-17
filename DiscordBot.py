@@ -38,21 +38,21 @@ class MainBot:
 
         @self.bot.command()
         @commands.has_any_role(staffrole)
-        async def status(ctx, statustype, message):
+        async def status(ctx, statustype, **args):
             if statustype == "playing":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.playing))
+                await self.bot.change_presence(activity=discord.Activity(name=**args, type=discord.ActivityType.playing))
             elif statustype == "watching":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.watching))
+                await self.bot.change_presence(activity=discord.Activity(name=**args, type=discord.ActivityType.watching))
             elif statustype == "listening":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.listening))
+                await self.bot.change_presence(activity=discord.Activity(name=**args, type=discord.ActivityType.listening))
             elif statustype == "streaming":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.streaming))
+                await self.bot.change_presence(activity=discord.Activity(name=**args, type=discord.ActivityType.streaming))
             elif statustype == "custom":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.custom))
+                await self.bot.change_presence(activity=discord.Activity(name=**args, type=discord.ActivityType.custom))
             else:
                 await ctx.channel.send("Invalid Status Type: " + statustype + ", Please choose from Playing/Watching/Listening/Streaming/Custom.")
                 return
-            await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
+            await ctx.channel.send("Status changed to type: " + statustype + ", message: " + **args + ".")
 
 if __name__ == "__main__":
 
