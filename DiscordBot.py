@@ -7,7 +7,7 @@ try:
     from SetEnviron import environ
     environ()
 except FileNotFoundError:
-    pass
+    print("SetEnviron file not found. Make sure a .env file is present or environment variables are set instead.")
 
 sizes = ["small", "medium", "large"]
 
@@ -25,17 +25,10 @@ class MainBot:
         async def on_ready():
             await self.bot.change_presence(game=discord.Game(name="Skytec City", type=3))
 
-        @self.bot.command(pass_context=True)
+        @self.bot.command()
         async def ping(ctx):
             await self.bot.say("Pong! Hello, " + ctx.message.author.mention)
             return
-
-        @self.bot.command(pass_context=True)
-        async def apply(ctx, sellitems, size):
-            if size in sizes:
-                await self.bot.say(ctx.message.author.mention + " You applied for a " + size + " size plot and you are planning to sell " + sellitems + ".")
-            else:
-                await self.bot.say(ctx.message.author.mention + " Plot size " + size + " is invalid. Please choose from " + ", ".join(sizes) + ".")
 
 if __name__ == "__main__":
 
