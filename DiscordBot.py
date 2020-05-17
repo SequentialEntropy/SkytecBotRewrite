@@ -6,6 +6,8 @@ import asyncio
 try:
     from SetEnviron import environ
     environ()
+    import Webserver
+    Webserver.server()
 except FileNotFoundError:
     print("SetEnviron file not found. Make sure a .env file is present or environment variables are set instead.")
 
