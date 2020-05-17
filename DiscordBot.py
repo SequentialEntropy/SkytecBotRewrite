@@ -58,7 +58,7 @@ class MainBot:
         @self.bot.command()
         @commands.has_any_role(staffrole)
         async def kill(ctx):
-            print("Server killed by: " + ctx.message.author + ".")
+            print("Server killed by: " + ctx.message.author.name + ".")
             await self.bot.logout()
             Webserver.kill()
 
