@@ -23,11 +23,12 @@ class MainBot:
 
         @self.bot.event
         async def on_ready():
-            await self.bot.change_presence(game=discord.Game(name="Skytec City", type=3))
+            print("Bot is ready.")
+            await self.bot.change_presence(activity=discord.Activity(name='Shadow Debug Noob', type=discord.ActivityType.watching))
 
         @self.bot.command()
         async def ping(ctx):
-            await self.bot.say("Pong! Hello, " + ctx.message.author.mention)
+            await ctx.channel.send("Pong! Hello, " + ctx.message.author.mention)
             return
 
 if __name__ == "__main__":
