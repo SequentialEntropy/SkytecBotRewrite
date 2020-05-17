@@ -36,7 +36,7 @@ class MainBot:
 
         @self.bot.command()
         async def status(ctx, statustype, message):
-            if ctx.author in bot.get_role(staffrole).members:
+            if ctx.author in self.bot.get_role(staffrole).members:
                 if statustype == "playing":
                     await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.playing))
                     await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
