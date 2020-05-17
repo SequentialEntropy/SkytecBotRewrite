@@ -35,24 +35,22 @@ class MainBot:
             return
 
         @self.bot.command()
+        @commands.has_any_role(staffrole)
         async def status(ctx, statustype, message):
-            if ctx.author in self.bot.get_role(staffrole).members:
-                if statustype == "playing":
-                    await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.playing))
-                    await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
-                elif statustype == "watching":
-                    await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.watching))
-                    await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
-                elif statustype == "streaming":
-                    await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.streaming))
-                    await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
-                elif statustype == "custom":
-                    await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.custom))
-                    await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
-                else:
-                    await ctx.channel.send("Invalid Status Type: " + statustype + ", Please choose from Playing/Watching/Streaming/Custom.")
+            if statustype == "playing":
+                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.playing))
+                await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
+            elif statustype == "watching":
+                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.watching))
+                await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
+            elif statustype == "streaming":
+                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.streaming))
+                await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
+            elif statustype == "custom":
+                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.custom))
+                await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
             else:
-                await ctx.channel.send("You do not have permission to use this command. You need to be a staff.")
+                await ctx.channel.send("Invalid Status Type: " + statustype + ", Please choose from Playing/Watching/Streaming/Custom.")
 
 if __name__ == "__main__":
 
