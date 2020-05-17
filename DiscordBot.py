@@ -55,6 +55,13 @@ class MainBot:
                 return
             await ctx.channel.send("Status changed to type: " + statustype + ", message: " + message + ".")
 
+        @self.bot.command()
+        @commands.has_any_role(staffrole)
+        async def kill(ctx):
+            print("Server killed by: " + ctx.message.author + ".")
+            await self.bot.logout()
+            Webserver.kill()
+
 if __name__ == "__main__":
 
     try:
