@@ -6,11 +6,14 @@ import asyncio
 try:
     from SetEnviron import environ
     environ()
-    import Webserver
-    Webserver.server()
 except FileNotFoundError:
     print("SetEnviron file not found. Make sure a .env file is present or environment variables are set instead.")
 
+try:
+    import Webserver
+    Webserver.server()
+except FileNotFoundError:
+    print("Webserver file not found. Make sure a .env file is present or environment variables are set instead.")
 
 sizes = ["small", "medium", "large"]
 staffrole = 653410679424024586
@@ -61,7 +64,6 @@ class MainBot:
             await ctx.channel.send("Bot killed by: " + ctx.message.author.mention + ".")
             print("Server killed by: " + ctx.message.author.name + ".")
             await self.bot.logout()
-            Webserver.kill()
 
 if __name__ == "__main__":
 
@@ -69,3 +71,4 @@ if __name__ == "__main__":
         main_bot = MainBot(os.environ["TOKEN"])
     except KeyError:
         print("Environment Variables not found. Unable to assign token.")
+    Webserver.kill()
