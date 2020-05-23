@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import asyncio
+import datetime
 
 try:
     from SetEnviron import environ
@@ -22,6 +23,7 @@ botcommands = {
     "-ping": "Sends a message back to the author | Usage: -ping",
     "-status": "Changes the status of the Skytec City bot [Requires Staff Role] | Usage: -status <playing/watching/listening/streaming/custom> <message>",
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role] | Usage: -kill",
+    "-uptime": "Tells uptime information of the Skytec City bot | Usage: -uptime",
     "-help": "Sends a list of all Skytec City commands | Usage: -help"
 }
 
@@ -31,6 +33,7 @@ class MainBot:
         self.bot = commands.Bot(command_prefix=("-"))
         self.bot.remove_command("help")
         self.token = token
+        self.startup = datetime.datetime.now()
         self.define_commands()
         self.bot.run(self.token)
 
@@ -46,7 +49,7 @@ class MainBot:
             embedelement = discord.Embed(
                 title="Ping Command",
                 description="Sends a message back to the author",
-                color=discord.Color.orange()
+                color=discord.Color.teal()
             )
             embedelement.add_field(
                 name="Pinged by " + ctx.message.author.display_name,
@@ -77,7 +80,7 @@ class MainBot:
                 embedelement = discord.Embed(
                     title="Status Command",
                     description="Changes the Skytec City bot status",
-                    color=discord.Color.green()
+                    color=discord.Color.blue()
                 )
                 embedelement.add_field(
                     name="Status was not changed",
@@ -92,7 +95,7 @@ class MainBot:
             embedelement = discord.Embed(
                 title="Status Command",
                 description="Changes the Skytec City bot status",
-                color=discord.Color.green()
+                color=discord.Color.blue()
             )
             embedelement.add_field(
                 name="Status changed by " + ctx.message.author.display_name,
@@ -123,6 +126,23 @@ class MainBot:
             )
             print("Server killed by: " + ctx.message.author.name + ".")
             await self.bot.logout()
+
+        @self.bot.command()
+        async def uptime(ctx):
+            embedelement = discord.Embed(
+                title="Uptime Command",
+                description="Tells uptime information",
+                color=discord.Color.gold()
+            )
+            embedelement.add_field(
+                name="Skytec City bot startup time",
+                value="Skytec City bot started up on [" + self.startup.strftime("%b %d %Y %H:%M:%S") "]",
+                inline=False
+            )
+            await ctx.channel.send(
+                content=None,
+                embed=embedelement
+            )
 
         @self.bot.command()
         async def help(ctx):
