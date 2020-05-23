@@ -17,7 +17,6 @@ def server():
     while not kill:
         print("Webserver Alive.")
     print("Webserver Dying.")
-    raise NameError
 
 def kill():
     print("Proceeding to kill webserver.")

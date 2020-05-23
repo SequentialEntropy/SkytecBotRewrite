@@ -46,11 +46,12 @@ class MainBot:
             embedelement = discord.Embed(
                 name="Ping Command",
                 description="Sends a message back to the author",
-                color=discord.Color.orange
+                color=discord.Color.orange()
             )
             embedelement.add_field(
                 name="Pinged by " + ctx.message.author.mention,
-                value="Pong"
+                value="Pong",
+                inline=False
             )
             await ctx.channel.send(
                 content=None,
@@ -76,11 +77,12 @@ class MainBot:
                 embedelement = discord.Embed(
                     title="Status Command",
                     description="Changes the Skytec City bot status",
-                    color=discord.Color.green
+                    color=discord.Color.green()
                 )
                 embedelement.add_field(
                     name="Status was not changed",
-                    value="Invalid Status Type [" + statustype + "] Please choose from [Playing/Watching/Listening/Streaming/Custom]"
+                    value="Invalid Status Type [" + statustype + "] Please choose from [Playing/Watching/Listening/Streaming/Custom]",
+                    inline=False
                 )
                 await ctx.channel.send(
                     content=None,
@@ -89,11 +91,12 @@ class MainBot:
             embedelement = discord.Embed(
                 title="Status Command",
                 description="Changes the Skytec City bot status",
-                color=discord.Color.green
+                color=discord.Color.green()
             )
             embedelement.add_field(
                 name="Status changed by " + ctx.message.author.mention,
-                value="Status changed to type [" + statustype + "] with message [" + message + "]"
+                value="Status changed to type [" + statustype + "] with message [" + message + "]",
+                inline=False
             )
             await ctx.channel.send(
                 content=None,
@@ -110,7 +113,8 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Skytec City bot killed by " + ctx.message.author.mention,
-                value="Skytec City bot is now shutting down for maintenance"
+                value="Skytec City bot is now shutting down for maintenance",
+                inline=False
             )
             await ctx.channel.send(
                 content=None,
@@ -129,7 +133,8 @@ class MainBot:
             for command in botcommands:
                 embedelement.add_field(
                     name=command,
-                    value=botcommands[command]
+                    value=botcommands[command],
+                    inline=False
                 )
             await ctx.channel.send(
                 content=None,
