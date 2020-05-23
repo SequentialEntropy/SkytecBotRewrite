@@ -136,7 +136,7 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Skytec City bot startup time",
-                value="Skytec City bot started up on [" + self.startup.strftime("%b %d %Y %H:%M:%S") "]",
+                value="Skytec City bot started up on [" + self.startup.strftime("%b %d %Y %H:%M:%S") + "]",
                 inline=False
             )
             await ctx.channel.send(
