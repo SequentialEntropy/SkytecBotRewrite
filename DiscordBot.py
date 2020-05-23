@@ -88,6 +88,7 @@ class MainBot:
                     content=None,
                     embed=embedelement
                 )
+                return
             embedelement = discord.Embed(
                 title="Status Command",
                 description="Changes the Skytec City bot status",
