@@ -14,11 +14,10 @@ def server():
     global kill
     server = Thread(target=run)
     server.start()
-    while True:
-        if kill:
-            print("Webserver Dying.")
-            break
+    while not kill:
         print("Webserver Alive.")
+    print("Webserver Dying.")
+    raise NameError
 
 def kill():
     print("Proceeding to kill webserver.")
