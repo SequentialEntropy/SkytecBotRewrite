@@ -44,12 +44,12 @@ class MainBot:
         @self.bot.command()
         async def ping(ctx):
             embedelement = discord.Embed(
-                name="Ping Command",
+                title="Ping Command",
                 description="Sends a message back to the author",
                 color=discord.Color.orange()
             )
             embedelement.add_field(
-                name="Pinged by " + ctx.message.author.mention,
+                name="Pinged by " + ctx.message.author.display_name,
                 value="Pong",
                 inline=False
             )
@@ -94,7 +94,7 @@ class MainBot:
                 color=discord.Color.green()
             )
             embedelement.add_field(
-                name="Status changed by " + ctx.message.author.mention,
+                name="Status changed by " + ctx.message.author.display_name,
                 value="Status changed to type [" + statustype + "] with message [" + message + "]",
                 inline=False
             )
@@ -112,7 +112,7 @@ class MainBot:
                 color=discord.Color.red()
             )
             embedelement.add_field(
-                name="Skytec City bot killed by " + ctx.message.author.mention,
+                name="Skytec City bot killed by " + ctx.message.author.display_name,
                 value="Skytec City bot is now shutting down for maintenance",
                 inline=False
             )
