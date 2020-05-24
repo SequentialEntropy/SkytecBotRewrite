@@ -20,11 +20,11 @@ sizes = ["small", "medium", "large"]
 staffrole = 653410679424024586
 
 botcommands = {
-    "-ping": "Sends a message back to the author | Usage: -ping",
-    "-status": "Changes the status of the Skytec City bot [Requires Staff Role] | Usage: -status <playing/watching/listening/streaming/custom> <message>",
-    "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role] | Usage: -kill",
-    "-uptime": "Tells uptime information of the Skytec City bot | Usage: -uptime",
-    "-help": "Sends a list of all Skytec City commands | Usage: -help"
+    "-ping": "Sends a message back to the author",
+    "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
+    "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
+    "-uptime": "Tells uptime information of the Skytec City bot",
+    "-help": "Sends a list of all Skytec City commands"
 }
 
 class MainBot:

@@ -10,12 +10,16 @@ def main():
 def server():
     print("Server code running.")
     server = Thread(target=run)
+    server.daemon = True
     server.start()
+    print("Server started")
+    return
 
 def kill():
     print("Proceeding to kill webserver.")
     raise RuntimeError("Shutting down server")
     print("Shutting down server, RuntimeError raised")
+    return
 
 def run():
     try:
@@ -23,3 +27,4 @@ def run():
         print("Webserver is ready.")
     except RuntimeError:
         print("Shutting down server, RuntimeError caught")
+    return
