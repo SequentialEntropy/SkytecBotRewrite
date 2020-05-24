@@ -22,5 +22,4 @@ def run():
         app.run(host="0.0.0.0", port=8080)
         print("Webserver is ready.")
     except RuntimeError:
-        if str(msg) == "Shutting down server":
-            print("Shutting down server, RuntimeError caught")
+        print("Shutting down server, RuntimeError caught")
