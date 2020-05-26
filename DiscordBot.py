@@ -21,7 +21,7 @@ staffrole = 653410679424024586
 
 botcommands = {
     "-ping": "Sends a message back to the author",
-    "-projects": "Shows a list of Skytec City projects",
+    "-projects": "Shows a list of current Skytec City projects",
     "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
     "-uptime": "Tells uptime information of the Skytec City bot",
@@ -71,10 +71,11 @@ class MainBot:
                 description="Shows a list of current Skytec City projects",
                 color=discord.Color.dark_blue()
             )
-            for project in range(0, len(updateprojects)):
+            for project in range(0, len(Webserver.updatedprojects)):
+                text = "Description: {}\nEstimate Time Completion: {}".format(str(Webserver.updatedprojects[project]["description"]), str(Webserver.updatedprojects[project]["estimated-time"].strftime("%b %d %Y")))
                 embedelement.add_field(
-                    name=updateprojects[project]["name"]
-                    value="Description: {}\nEstimate Time Completion: {}".format(str(Webserver.updateprojects[project]["description"]), str(Webserver.updateprojects[project]["estimated-time"].strftime("%b %d %Y")))
+                    name=str(Webserver.updatedprojects[project]["name"]),
+                    value=text,
                     inline=False
                 )
             await ctx.channel.send(

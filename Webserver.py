@@ -24,12 +24,13 @@ def projects():
 
 def server():
     print("Server code running.")
-    server = Thread(target=run)
-    server.daemon = True
-    server.start()
     firebaselink = Thread(target=firebaseupdate)
     firebaselink.daemon = True
     firebaselink.start()
+    time.sleep(3)
+    server = Thread(target=run)
+    server.daemon = True
+    server.start()
     print("Server started")
     return
 
