@@ -21,7 +21,7 @@ staffrole = 653410679424024586
 
 botcommands = {
     "-ping": "Sends a message back to the author",
-    "-projects": "Shows a list of Skytec City projects"
+    "-projects": "Shows a list of Skytec City projects",
     "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
     "-uptime": "Tells uptime information of the Skytec City bot",
