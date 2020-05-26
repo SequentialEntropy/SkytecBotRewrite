@@ -74,7 +74,7 @@ class MainBot:
             for project in range(0, len(updateprojects)):
                 embedelement.add_field(
                     name=updateprojects[project]["name"]
-                    value="Description: " + updateprojects[project]["description"] + "\nEstimate Time Completion: " + updateprojects[project]["estimated-time"].strftime("%b %d %Y")
+                    value="Description: " + Webserver.updateprojects[project]["description"] + "\nEstimate Time Completion: " + Webserver.updateprojects[project]["estimated-time"].strftime("%b %d %Y")
                     inline=False
                 )
             await ctx.channel.send(
