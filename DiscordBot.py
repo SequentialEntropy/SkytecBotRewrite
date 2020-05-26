@@ -14,7 +14,7 @@ try:
     import Webserver
     Webserver.server()
 except FileNotFoundError:
-    print("Webserver file not found. Make sure a .env file is present or environment variables are set instead.")
+    print("Webserver file not found. Bot will not be able to stay online nor receive data from the database.")
 
 sizes = ["small", "medium", "large"]
 staffrole = 653410679424024586
