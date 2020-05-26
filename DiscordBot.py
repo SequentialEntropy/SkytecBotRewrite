@@ -71,7 +71,7 @@ class MainBot:
                 description="Shows a list of current Skytec City projects",
                 color=discord.Color.dark_blue()
             )
-            for project in updateprojects:
+            for project in range(0, len(updateprojects)):
                 embedelement.add_field(
                     name=updateprojects[project]["name"]
                     value="Description: " + updateprojects[project]["description"] + "\nEstimate Time Completion: " + updateprojects[project]["estimated-time"].strftime("%b %d %Y")
