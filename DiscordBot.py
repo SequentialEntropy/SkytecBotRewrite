@@ -186,7 +186,10 @@ class MainBot:
 if __name__ == "__main__":
 
     try:
+        print("Description: " + Webserver.updateprojects[project]["description"] + "\nEstimate Time Completion: " + Webserver.updateprojects[project]["estimated-time"].strftime("%b %d %Y"))
         main_bot = MainBot(os.environ["TOKEN"])
     except KeyError:
         print("Environment Variables not found. Unable to assign token.")
+    except SyntaxError:
+        print("Syntax Error")
     Webserver.kill()
