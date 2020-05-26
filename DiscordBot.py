@@ -74,7 +74,7 @@ class MainBot:
             for project in range(0, len(updateprojects)):
                 embedelement.add_field(
                     name=updateprojects[project]["name"]
-                    value="Description: " + Webserver.updateprojects[project]["description"] + "\nEstimate Time Completion: " + Webserver.updateprojects[project]["estimated-time"].strftime("%b %d %Y")
+                    value="Description: {}\nEstimate Time Completion: {}".format(str(Webserver.updateprojects[project]["description"]), str(Webserver.updateprojects[project]["estimated-time"].strftime("%b %d %Y")))
                     inline=False
                 )
             await ctx.channel.send(
@@ -186,7 +186,6 @@ class MainBot:
 if __name__ == "__main__":
 
     try:
-        print("Description: " + Webserver.updateprojects[project]["description"] + "\nEstimate Time Completion: " + Webserver.updateprojects[project]["estimated-time"].strftime("%b %d %Y"))
         main_bot = MainBot(os.environ["TOKEN"])
     except KeyError:
         print("Environment Variables not found. Unable to assign token.")
