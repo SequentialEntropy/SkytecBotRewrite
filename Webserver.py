@@ -43,9 +43,9 @@ def firebaseupdate():
     global updatedprojects
     while True:
         updatedprojects = FirebaseConnection.firebasefetch("projects")
+        if updatedprojects != None:
+            print("Projects Updated")
         time.sleep(86400)
-
-
 
 def run():
     try:

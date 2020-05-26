@@ -21,6 +21,7 @@ staffrole = 653410679424024586
 
 botcommands = {
     "-ping": "Sends a message back to the author",
+    "-projects": "Shows a list of Skytec City projects"
     "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
     "-uptime": "Tells uptime information of the Skytec City bot",
@@ -61,6 +62,26 @@ class MainBot:
                 embed=embedelement
             )
             return
+
+        @self.bot.command()
+        async def projects(ctx):
+            global updateprojects
+            embedelement = discord.Embed(
+                title="Projects Command",
+                description="Shows a list of current Skytec City projects",
+                color=discord.Color.dark_blue()
+            )
+            for project in updateprojects:
+                embedelement.add_field(
+                    name=updateprojects[project]["name"]
+                    value="Description: " + updateprojects[project]["description"] + "\nEstimate Time Completion: " + updateprojects[project]["estimated-time"].strftime("%b %d %Y")
+                    inline=False
+                )
+            await ctx.channel.send(
+                content=None,
+                embed=embedelement
+            )
+
 
         @self.bot.command()
         @commands.has_any_role(staffrole)

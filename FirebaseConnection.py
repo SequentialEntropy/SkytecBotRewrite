@@ -2,13 +2,6 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 import os
-import datetime
-
-# try:
-#     from SetEnviron import environ
-#     environ()
-# except FileNotFoundError:
-#     print("SetEnviron file not found. Make sure a .env file is present or environment variables are set instead.")
 
 cred = credentials.Certificate({
 			  "type": "service_account",
@@ -26,25 +19,7 @@ cred = credentials.Certificate({
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# doc_ref = db.collection("projects").document("newdoc")
-# doc_ref.set({
-#     "name": "Test Project"
-# })
-
-# emp_ref = db.collection("projects")
-# projects = emp_ref.stream()
-# for project in projects:
-#     print("{} => {}".format(project.id, project.to_dict()))
-#     print(project.to_dict()["estimated-time"].strftime("%b %d %Y %H:%M:%S"))
-#     print(project.to_dict()["estimated-time"].strftime("%b %d %Y"))
-#     print(project.to_dict()["estimated-time"].day)
-#     print(project.to_dict()["estimated-time"].month)
-#     print(project.to_dict()["estimated-time"].year)
-#     print(type(project.to_dict()["estimated-time"]))
-
 def firebasefetch(collection):
     global db
     documents = db.collection(collection).stream()
     return [document.to_dict() for document in documents]
-    
-print(firebasefetch("projects"))
