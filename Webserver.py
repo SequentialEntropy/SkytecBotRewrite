@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 
@@ -8,6 +9,8 @@ except FileNotFoundError:
     print("FirebaseConnection file not found. Website will not be able to access the database.")
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.route("/")
 def main():
@@ -17,6 +20,7 @@ def main():
     return text
 
 @app.route("/projects/")
+@cross_origin()
 def projects():
     global updatedprojects
     print(str(updatedprojects))
@@ -46,7 +50,7 @@ def firebaseupdate():
         updatedprojects = FirebaseConnection.firebasefetch("projects")
         if updatedprojects != None:
             print("Projects Updated")
-        time.sleep(86400)
+        time.sleep(3600)
 
 def run():
     try:
