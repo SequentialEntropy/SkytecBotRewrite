@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 import asyncio
 import datetime
+from mcstatus import MinecraftServer
 
 try:
     from SetEnviron import environ
@@ -25,6 +26,7 @@ botcommands = {
     "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
     "-uptime": "Tells uptime information of the Skytec City bot",
+    "-getinfo <server>": "Get information about the Altitude servers",
     "-help": "Sends a list of all Skytec City commands"
 }
 
@@ -165,6 +167,41 @@ class MainBot:
                 content=None,
                 embed=embedelement
             )
+
+        @self.bot.command()
+        async def getinfo(ctx, server):
+            if server in ["valley", "summit", "meadow", "atoll", "creative"]:
+                server = MinecraftServer.lookup(server + ".alttd.com")
+                status = server.status()
+                embedelement = discord.Embed(
+                    title="Server Status",
+                    description="Information of the server",
+                    color=discord.Color.green()
+                )
+                for information in server:
+                    embedelement.add_field(
+                    name=information,
+                    value=server[information],
+                    inline=False
+                )
+                await ctx.channel.send(
+                    content=None,
+                    embed=embedelement
+                )
+            else:
+                embedelement = discord.Embed(
+                    title="Server Status",
+                    description="Information of the Server",
+                    color=discord.Color.green()
+                )
+                embedelement.add_field(
+                    name="Failed to Get Information"
+                    value="Invalid Server Name [" + server + "] Please choose from [valley/summit/meadow/atoll/creative]"
+                )
+                await ctx.channel.send(
+                    content=None,
+                    embed=embedelement
+                )
 
         @self.bot.command()
         async def help(ctx):
