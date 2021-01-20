@@ -195,7 +195,7 @@ class MainBot:
                     color=discord.Color.green()
                 )
                 embedelement.add_field(
-                    name="Failed to Get Information"
+                    name="Failed to Get Information",
                     value="Invalid Server Name [" + server + "] Please choose from [valley/summit/meadow/atoll/creative]"
                 )
                 await ctx.channel.send(
