@@ -3,7 +3,8 @@ from discord.ext import commands
 import os
 import asyncio
 import datetime
-from mcstatus import MinecraftServer
+import requests
+import json
 
 try:
     from SetEnviron import environ
@@ -17,6 +18,41 @@ try:
 except FileNotFoundError:
     print("Webserver file not found. Bot will not be able to stay online nor receive data from the database.")
 
+try:
+    import ServerInfoModule
+    servers = {
+        "lobby": {
+            "api": ServerInfoModule.Server("lobby.alttd.com"),
+            "color": 0x969c9f
+        },
+        "valley": {
+            "api": ServerInfoModule.Server("valley.alttd.com", "vmap.alttd.com", "115survival"),
+            "color": 0xf700ff
+        },
+        "summit": {
+            "api": ServerInfoModule.Server("summit.alttd.com", "smap.alttd.com", "115survival"),
+            "color": 0x00c9ff
+        },
+        "meadow": {
+            "api": ServerInfoModule.Server("meadow.alttd.com", "mmap.alttd.com", "115survival"),
+            "color": 0x00fe5d
+        },
+        "atoll": {
+            "api": ServerInfoModule.Server("atoll.alttd.com", "amap.alttd.com", "115survival"),
+            "color": 0xe8ff00
+        },
+        "creative": {
+            "api": ServerInfoModule.Server("creative.alttd.com"),
+            "color": 0x969c9f
+        },
+        "events": {
+            "api": ServerInfoModule.Server("events.alttd.com"),
+            "color": 0x969c9f    
+        }
+    }
+except FileNotFoundError:
+    print("ServerInfoModule file not found. Bot will not ping servers.")
+
 sizes = ["small", "medium", "large"]
 staffrole = 653410679424024586
 
@@ -26,7 +62,8 @@ botcommands = {
     "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
     "-uptime": "Tells uptime information of the Skytec City bot",
-    "-getinfo <server>": "Get information about the Altitude servers",
+    "-server <server (leave blank for all servers)>": "Get information about the Altitude servers",
+    "-players <server (leave blank for all servers)>": "Get information about online players"
     "-help": "Sends a list of all Skytec City commands"
 }
 
@@ -45,7 +82,7 @@ class MainBot:
         @self.bot.event
         async def on_ready():
             print("Bot is ready.")
-            await self.bot.change_presence(activity=discord.Activity(name='Skytec City', type=discord.ActivityType.watching))
+            await self.bot.change_presence(activity=discord.Activity(name='Soon™ -server command', type=discord.ActivityType.playing))
 
         @self.bot.command()
         async def ping(ctx):
@@ -84,7 +121,6 @@ class MainBot:
                 content=None,
                 embed=embedelement
             )
-
 
         @self.bot.command()
         @commands.has_any_role(staffrole)
@@ -169,39 +205,184 @@ class MainBot:
             )
 
         @self.bot.command()
-        async def getinfo(ctx, server):
-            if server in ["valley", "summit", "meadow", "atoll", "creative"]:
-                server = MinecraftServer.lookup(server + ".alttd.com")
-                status = server.status()
-                embedelement = discord.Embed(
-                    title="Server Status",
-                    description="Information of the server",
-                    color=discord.Color.green()
-                )
-                for information in server:
-                    embedelement.add_field(
-                    name=information,
-                    value=server[information],
-                    inline=False
-                )
-                await ctx.channel.send(
-                    content=None,
-                    embed=embedelement
-                )
+        async def server(ctx, server=None):
+
+            if server in servers:
+                queryservers = [server]
             else:
-                embedelement = discord.Embed(
-                    title="Server Status",
-                    description="Information of the Server",
-                    color=discord.Color.green()
-                )
-                embedelement.add_field(
-                    name="Failed to Get Information",
-                    value="Invalid Server Name [" + server + "] Please choose from [valley/summit/meadow/atoll/creative]"
-                )
+                queryservers = [element for element in servers]
+
+            for server in queryservers:
+
+                api = servers[server]["api"]
+                api.update()
+
+                if api.info["motd"]["decoded"] != None:
+                    embedelement = discord.Embed(
+                        title=server[0].upper() + server[1:],
+                        description="```{}```".format("\n".join(api.info["motd"]["decoded"])),
+                        color=servers[server]["color"]
+                    )
+                else:
+                    embedelement = discord.Embed(
+                        title=server[0].upper() + server[1:],
+                        description="```Unable to fetch MOTD```",
+                        color=servers[server]["color"]
+                    )
+
+                if (api.info["ip"] != None) and (api.info["port"] != None):
+                    embedelement.add_field(
+                        name="Address",
+                        value="{}:{}".format(servers[server]["api"].info["ip"], str(servers[server]["api"].info["port"]))
+                    )
+                else:
+                    embedelement.add_field(
+                        name="Address",
+                        value="Unable to fetch"
+                    )
+                
+                if api.info["version"] != None:
+                    if api.info["software"] != None:
+                        embedelement.add_field(
+                            name="Version",
+                            value="{} ({})".format(api.info["version"], api.info["software"])
+                        )
+                    else:
+                        embedelement.add_field(
+                            name="Version",
+                            value=api.info["version"]
+                        )
+                else:
+                    embedelement.add_field(
+                        name="Version",
+                        value="Unable to fetch"
+                    )
+                
+                if (api.info["players"]["online"] != None) and (api.info["players"]["max"] != None):
+                    embedelement.add_field(
+                        name="Players",
+                        value="{} / {}".format(str(api.info["players"]["online"]), str(api.info["players"]["max"]))
+                    )
+                else:
+                    embedelement.add_field(
+                        name="Players",
+                        value="Unable to fetch"
+                    )
+                
+                if api.dynmapip != False:
+                    if api.info["servertime"] != None:
+                        embedelement.add_field(
+                            name="Server Time",
+                            value=str(api.info["servertime"])
+                        )
+                    else:
+                        embedelement.add_field(
+                            name="Server Time",
+                            value="Unable to fetch"
+                        )
+                    if api.info["weather"] != None:
+                        embedelement.add_field(
+                            name="Weather",
+                            value=api.info["weather"]
+                        )
+                    else:
+                        embedelement.add_field(
+                            name="Weather",
+                            value="Unable to fetch"
+                        )
+
+                    embedelement.add_field(
+                        name="Warps",
+                        value=str(len(api.info["warps"]))
+                    )
+
+                embedelement.set_thumbnail(url=api.info["icon"])
+
                 await ctx.channel.send(
                     content=None,
                     embed=embedelement
                 )
+
+        @self.bot.command()
+        async def players(ctx, server=None):
+            if server in servers:
+                queryservers = [server]
+            else:
+                queryservers = [element for element in servers]
+
+            for server in queryservers:
+
+                api = servers[server]["api"]
+
+                api.update()
+
+                playeritems = [item for item in api.info["players"]["list"].items()]
+
+                playerpergroup = 20
+
+                groupedplayers = [{keyvalue[0]:keyvalue[1] for keyvalue in playeritems[group:group + playerpergroup]} for group in range(0, len(playeritems), playerpergroup)]
+
+                if len(api.info["players"]["list"]) == 0:
+                    embedelement = discord.Embed(
+                        title=server[0].upper() + server[1:],
+                        description="No Players Online",
+                        color=servers[server]["color"]
+                    )
+                    embedelement.set_thumbnail(url=api.info["icon"])
+                    await ctx.channel.send(
+                        content=None,
+                        embed=embedelement
+                    )
+
+                for pagenumber in range(0, len(groupedplayers)):
+                    group = groupedplayers[pagenumber]
+                    embedelement = discord.Embed(
+                        title=server[0].upper() + server[1:],
+                        description="Players {} - {} / {}\nPage {} / {}".format(
+                            str(pagenumber * playerpergroup + 1),
+                            str(pagenumber * playerpergroup + len(group)),
+                            str(len(api.info["players"]["list"])),
+                            str(pagenumber + 1),
+                            str(len(groupedplayers))
+                        ),
+                        color=servers[server]["color"]
+                    )
+
+                    embedelement.set_thumbnail(url=api.info["icon"])
+
+                    for player in group:
+                        if group[player]["nickname"] != None:
+                            nick = "{} ({})".format(player, group[player]["nickname"])
+                        else:
+                            nick = player
+
+                        if group[player]["dimension"] == "Overworld":
+                            dimension = "Overworld"
+                            fetched = True
+                            for axis in group[player]["position"]:
+                                if axis == None:
+                                    fetched = False
+                            if fetched:
+                                position = "({}, {}, {})".format(int(group[player]["position"]["x"]), int(group[player]["position"]["y"]), int(group[player]["position"]["z"]))
+                            else:
+                                position = "Unable to fetch"
+                        elif group[player]["dimension"] == "Nether or End":
+                            dimension = "Nether or End"
+                            position = "Unable to fetch - Player not in Overworld"
+                        else:
+                            dimension = "Unable to fetch"
+                            position = "Unable to fetch - Player not on Dynmap"
+
+                        embedelement.add_field(
+                            name=nick,
+                            value="Dimension: {}\nPosition: {}".format(dimension, position),
+                            inline=False
+                        )
+
+                    await ctx.channel.send(
+                        content=None,
+                        embed=embedelement
+                    )
 
         @self.bot.command()
         async def help(ctx):
