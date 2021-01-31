@@ -63,7 +63,8 @@ botcommands = {
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
     "-uptime": "Tells uptime information of the Skytec City bot",
     "-server <server (leave blank for all servers)>": "Get information about the Altitude servers",
-    "-players <server (leave blank for all servers)>": "Get information about online players"
+    "-players <server (leave blank for all servers)>": "Get information about online players",
+    "-warps <server (leave blank for all servers)>": "Get information about warps",
     "-help": "Sends a list of all Skytec City commands"
 }
 
@@ -376,6 +377,83 @@ class MainBot:
                         embedelement.add_field(
                             name=nick,
                             value="Dimension: {}\nPosition: {}".format(dimension, position),
+                            inline=False
+                        )
+
+                    await ctx.channel.send(
+                        content=None,
+                        embed=embedelement
+                    )
+
+        @self.bot.command()
+        async def warps(ctx, server=None):
+            if server in servers:
+                queryservers = [server]
+            else:
+                queryservers = [element for element in servers]
+
+            for server in queryservers:
+
+                api = servers[server]["api"]
+
+                api.update()
+
+                warpitems = [item for item in api.info["warps"].items()]
+
+                warppergroup = 20
+
+                groupedwarps = [{keyvalue[0]:keyvalue[1] for keyvalue in warpitems[group:group + warppergroup]} for group in range(0, len(warpitems), warppergroup)]
+
+                if len(api.info["warps"]) == 0:
+                    embedelement = discord.Embed(
+                        title=server[0].upper() + server[1:],
+                        description="No Warps on this Server",
+                        color=servers[server]["color"]
+                    )
+                    embedelement.set_thumbnail(url=api.info["icon"])
+                    await ctx.channel.send(
+                        content=None,
+                        embed=embedelement
+                    )
+
+                for pagenumber in range(0, len(groupedwarps)):
+                    group = groupedwarps[pagenumber]
+                    embedelement = discord.Embed(
+                        title=server[0].upper() + server[1:],
+                        description="Warps {} - {} / {}\nPage {} / {}".format(
+                            str(pagenumber * warppergroup + 1),
+                            str(pagenumber * warppergroup + len(group)),
+                            str(len(api.info["warps"])),
+                            str(pagenumber + 1),
+                            str(len(groupedwarps))
+                        ),
+                        color=servers[server]["color"]
+                    )
+
+                    embedelement.set_thumbnail(url=api.info["icon"])
+
+                    for warp in group:
+                        if group[warp]["owner"] != None:
+                            owner = group[warp]["owner"]
+                        else:
+                            owner = "Unable to fetch"
+                        
+                        if group[warp]["description"] != None:
+                            description = group[warp]["description"]
+
+                        fetched = True
+                        for axis in group[warp]["position"]:
+                            if axis == None:
+                                fetched = False
+                        if fetched:
+                            position = "({}, {}, {})".format(int(group[warp]["position"]["x"]), int(group[warp]["position"]["y"]), int(group[warp]["position"]["z"]))
+                        else:
+                            position = "Unable to fetch"
+                        
+
+                        embedelement.add_field(
+                            name=warp,
+                            value="Owner: {}\nPosition: {}\nDescription: {}".format(owner, position, description),
                             inline=False
                         )
 
