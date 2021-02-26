@@ -1,10 +1,7 @@
 import discord
 from discord.ext import commands
 import os
-import asyncio
 import datetime
-import requests
-import json
 
 try:
     from SetEnviron import environ
@@ -17,41 +14,6 @@ try:
     Webserver.server()
 except FileNotFoundError:
     print("Webserver file not found. Bot will not be able to stay online nor receive data from the database.")
-
-try:
-    import ServerInfoModule
-    servers = {
-        "lobby": {
-            "api": ServerInfoModule.Server("lobby.alttd.com"),
-            "color": 0x969c9f
-        },
-        "valley": {
-            "api": ServerInfoModule.Server("valley.alttd.com", "vmap.alttd.com", "115survival"),
-            "color": 0xf700ff
-        },
-        "summit": {
-            "api": ServerInfoModule.Server("summit.alttd.com", "smap.alttd.com", "115survival"),
-            "color": 0x00c9ff
-        },
-        "meadow": {
-            "api": ServerInfoModule.Server("meadow.alttd.com", "mmap.alttd.com", "115survival"),
-            "color": 0x00fe5d
-        },
-        "atoll": {
-            "api": ServerInfoModule.Server("atoll.alttd.com", "amap.alttd.com", "115survival"),
-            "color": 0xe8ff00
-        },
-        "creative": {
-            "api": ServerInfoModule.Server("creative.alttd.com"),
-            "color": 0x969c9f
-        },
-        "events": {
-            "api": ServerInfoModule.Server("events.alttd.com"),
-            "color": 0x969c9f    
-        }
-    }
-except FileNotFoundError:
-    print("ServerInfoModule file not found. Bot will not ping servers.")
 
 sizes = ["small", "medium", "large"]
 staffrole = 653410679424024586
@@ -83,7 +45,7 @@ class MainBot:
         @self.bot.event
         async def on_ready():
             print("Bot is ready.")
-            await self.bot.change_presence(activity=discord.Activity(name='Soon™ -server command', type=discord.ActivityType.playing))
+            await self.bot.change_presence(activity=discord.Activity(name="Bot Maintenance", type=discord.ActivityType.playing))
 
         @self.bot.command()
         async def ping(ctx):
@@ -208,33 +170,35 @@ class MainBot:
         @self.bot.command()
         async def server(ctx, server=None):
 
-            if server in servers:
+            global servers
+            print(Webserver.servers)
+            if server in Webserver.servers:
                 queryservers = [server]
             else:
-                queryservers = [element for element in servers]
+                queryservers = [element for element in Webserver.servers]
 
             for server in queryservers:
 
-                api = servers[server]["api"]
+                api = Webserver.servers[server]["api"]
                 api.update()
 
                 if api.info["motd"]["decoded"] != None:
                     embedelement = discord.Embed(
                         title=server[0].upper() + server[1:],
                         description="```{}```".format("\n".join(api.info["motd"]["decoded"])),
-                        color=servers[server]["color"]
+                        color=Webserver.servers[server]["color"]
                     )
                 else:
                     embedelement = discord.Embed(
                         title=server[0].upper() + server[1:],
                         description="```Unable to fetch MOTD```",
-                        color=servers[server]["color"]
+                        color=Webserver.servers[server]["color"]
                     )
 
                 if (api.info["ip"] != None) and (api.info["port"] != None):
                     embedelement.add_field(
                         name="Address",
-                        value="{}:{}".format(servers[server]["api"].info["ip"], str(servers[server]["api"].info["port"]))
+                        value="{}:{}".format(Webserver.servers[server]["api"].info["ip"], str(Webserver.servers[server]["api"].info["port"]))
                     )
                 else:
                     embedelement.add_field(
@@ -306,14 +270,14 @@ class MainBot:
 
         @self.bot.command()
         async def players(ctx, server=None):
-            if server in servers:
+            if server in Webserver.servers:
                 queryservers = [server]
             else:
-                queryservers = [element for element in servers]
+                queryservers = [element for element in Webserver.servers]
 
             for server in queryservers:
 
-                api = servers[server]["api"]
+                api = Webserver.servers[server]["api"]
 
                 api.update()
 
@@ -327,7 +291,7 @@ class MainBot:
                     embedelement = discord.Embed(
                         title=server[0].upper() + server[1:],
                         description="No Players Online",
-                        color=servers[server]["color"]
+                        color=Webserver.servers[server]["color"]
                     )
                     embedelement.set_thumbnail(url=api.info["icon"])
                     await ctx.channel.send(
@@ -346,7 +310,7 @@ class MainBot:
                             str(pagenumber + 1),
                             str(len(groupedplayers))
                         ),
-                        color=servers[server]["color"]
+                        color=Webserver.servers[server]["color"]
                     )
 
                     embedelement.set_thumbnail(url=api.info["icon"])
@@ -387,14 +351,14 @@ class MainBot:
 
         @self.bot.command()
         async def warps(ctx, server=None):
-            if server in servers:
+            if server in Webserver.servers:
                 queryservers = [server]
             else:
-                queryservers = [element for element in servers]
+                queryservers = [element for element in Webserver.servers]
 
             for server in queryservers:
 
-                api = servers[server]["api"]
+                api = Webserver.servers[server]["api"]
 
                 api.update()
 
@@ -408,7 +372,7 @@ class MainBot:
                     embedelement = discord.Embed(
                         title=server[0].upper() + server[1:],
                         description="No Warps on this Server",
-                        color=servers[server]["color"]
+                        color=Webserver.servers[server]["color"]
                     )
                     embedelement.set_thumbnail(url=api.info["icon"])
                     await ctx.channel.send(
@@ -427,7 +391,7 @@ class MainBot:
                             str(pagenumber + 1),
                             str(len(groupedwarps))
                         ),
-                        color=servers[server]["color"]
+                        color=Webserver.servers[server]["color"]
                     )
 
                     embedelement.set_thumbnail(url=api.info["icon"])

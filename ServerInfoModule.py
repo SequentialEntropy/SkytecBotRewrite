@@ -13,8 +13,13 @@ class Server:
     def update(self):
         info = {}
 
-        ping = json.loads(requests.get("https://api.mcsrvstat.us/2/" + self.ip).text)
-        sample = json.loads(requests.get("https://api.mcsrvstat.us/ping/" + self.ip).text)
+        try:
+            rawping = requests.get("https://api.mcsrvstat.us/2/" + self.ip)
+            ping = json.loads(rawping.text)
+            rawsample = requests.get("https://api.mcsrvstat.us/ping/" + self.ip)
+            sample = json.loads(rawsample.text)
+        except requests.exceptions.RequestException:
+            print("\nSomething Went Wrong\n")
 
         for element in ["online", "ip", "port", "version", "software"]:
             if element in ping:
@@ -78,7 +83,17 @@ class Server:
         info["icon"] = "https://api.mcsrvstat.us/icon/" + self.ip
 
         if self.dynmapip != False:
-            dynmap = json.loads(requests.get("https://" + self.dynmapip + "/standalone/dynmap_" + self.world + ".json").text)
+            try:
+                rawdynmap = requests.get("https://" + self.dynmapip + "/standalone/dynmap_" + self.world + ".json")
+                print(str(rawdynmap.status_code))
+                print(type(rawdynmap.status_code))
+                if rawdynmap.status_code == 404:
+                    dynmap = {}
+                else:
+                    dynmap = json.loads(rawdynmap.text)
+            except requests.exceptions.RequestException:
+                print("Something Went Wrong")
+                dynmap = {}
             if ("hasStorm" in dynmap) and ("isThundering" in dynmap):
                 if dynmap["hasStorm"]:
                     if dynmap["isThundering"]:
@@ -124,8 +139,14 @@ class Server:
                         nickname = html2text.html2text(player["name"]).replace("\n", "")
                         if nickname != player["account"]:
                             info["players"]["list"][player["account"]]["nickname"] = nickname
-            
-            markers = json.loads(requests.get("https://" + self.dynmapip + "/tiles/_markers_/marker_" + self.world + ".json").text)
+            try:
+                rawmarkers = requests.get("https://" + self.dynmapip + "/tiles/_markers_/marker_" + self.world + ".json")
+                if rawmarkers.status_code == 404:
+                    markers = {}
+                else:
+                    markers = json.loads(rawmarkers.text)
+            except requests.exceptions.RequestException:
+                markers = {}
 
             info["warps"] = {}
 
@@ -158,5 +179,5 @@ class Server:
             info["weather"] = None
             info["servertime"] = None
             info["warps"] = {}
-
+        self.infolast = self.info
         self.info = info
