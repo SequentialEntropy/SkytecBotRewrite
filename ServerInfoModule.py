@@ -19,7 +19,8 @@ class Server:
             rawsample = requests.get("https://api.mcsrvstat.us/ping/" + self.ip)
             sample = json.loads(rawsample.text)
         except requests.exceptions.RequestException:
-            print("\nSomething Went Wrong\n")
+            ping = {}
+            sample = {}
 
         for element in ["online", "ip", "port", "version", "software"]:
             if element in ping:
@@ -85,14 +86,11 @@ class Server:
         if self.dynmapip != False:
             try:
                 rawdynmap = requests.get("https://" + self.dynmapip + "/standalone/dynmap_" + self.world + ".json")
-                print(str(rawdynmap.status_code))
-                print(type(rawdynmap.status_code))
                 if rawdynmap.status_code == 404:
                     dynmap = {}
                 else:
                     dynmap = json.loads(rawdynmap.text)
             except requests.exceptions.RequestException:
-                print("Something Went Wrong")
                 dynmap = {}
             if ("hasStorm" in dynmap) and ("isThundering" in dynmap):
                 if dynmap["hasStorm"]:
