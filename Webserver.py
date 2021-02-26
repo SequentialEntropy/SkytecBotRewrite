@@ -91,7 +91,6 @@ def serverinfoupdate():
         }
         for server in servers:
             servers[server]["api"].update()
-            print(str(servers[server]["api"].info))
     except FileNotFoundError:
         print("ServerInfoModule file not found. Bot will not ping servers.")
 
