@@ -46,6 +46,7 @@ class MainBot:
         async def on_ready():
             print("Bot is ready.")
             await self.bot.change_presence(activity=discord.Activity(name="Bot Maintenance", type=discord.ActivityType.playing))
+            #await self.bot.change_presence(activity=discord.Streaming(name="Bot Maintenance", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
 
         @self.bot.command()
         async def ping(ctx):
@@ -55,7 +56,7 @@ class MainBot:
                 color=discord.Color.teal()
             )
             embedelement.add_field(
-                name="Pinged by " + ctx.message.author.display_name,
+                name="Pinged by {}".format(ctx.message.author.display_name),
                 value="Pong",
                 inline=False
             )
@@ -67,7 +68,6 @@ class MainBot:
 
         @self.bot.command()
         async def projects(ctx):
-            global updateprojects
             embedelement = discord.Embed(
                 title="Projects Command",
                 description="Shows a list of current Skytec City projects",
@@ -107,7 +107,7 @@ class MainBot:
                 )
                 embedelement.add_field(
                     name="Status was not changed",
-                    value="Invalid Status Type [" + statustype + "] Please choose from [Playing/Watching/Listening/Streaming/Custom]",
+                    value="Invalid Status Type [{}] Please choose from [Playing/Watching/Listening/Streaming/Custom]".format(statustype),
                     inline=False
                 )
                 await ctx.channel.send(
@@ -121,8 +121,8 @@ class MainBot:
                 color=discord.Color.blue()
             )
             embedelement.add_field(
-                name="Status changed by " + ctx.message.author.display_name,
-                value="Status changed to type [" + statustype + "] with message [" + message + "]",
+                name="Status changed by {}".format(ctx.message.author.display_name),
+                value="Status changed to type [{}] with message [{}]".format(statustype, message),
                 inline=False
             )
             await ctx.channel.send(
@@ -139,7 +139,7 @@ class MainBot:
                 color=discord.Color.red()
             )
             embedelement.add_field(
-                name="Skytec City bot killed by " + ctx.message.author.display_name,
+                name="Skytec City bot killed by {}".format(ctx.message.author.display_name),
                 value="Skytec City bot is now shutting down for maintenance",
                 inline=False
             )
@@ -147,7 +147,7 @@ class MainBot:
                 content=None,
                 embed=embedelement
             )
-            print("Server killed by: " + ctx.message.author.name + ".")
+            print("Server killed by: {}.".format(ctx.message.author.name))
             await self.bot.logout()
 
         @self.bot.command()
@@ -159,7 +159,7 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Skytec City bot startup time",
-                value="Skytec City bot started up on [" + self.startup.strftime("%b %d %Y %H:%M:%S") + "]",
+                value="Skytec City bot started up on [{}]".format(self.startup.strftime("%b %d %Y %H:%M:%S")),
                 inline=False
             )
             await ctx.channel.send(
@@ -170,8 +170,6 @@ class MainBot:
         @self.bot.command()
         async def server(ctx, server=None):
 
-            global servers
-            print(Webserver.servers)
             if server in Webserver.servers:
                 queryservers = [server]
             else:
@@ -180,25 +178,23 @@ class MainBot:
             for server in queryservers:
 
                 api = Webserver.servers[server]["api"]
-                api.update()
 
-                if api.info["motd"]["decoded"] != None:
-                    embedelement = discord.Embed(
-                        title=server[0].upper() + server[1:],
-                        description="```{}```".format("\n".join(api.info["motd"]["decoded"])),
-                        color=Webserver.servers[server]["color"]
-                    )
-                else:
-                    embedelement = discord.Embed(
-                        title=server[0].upper() + server[1:],
-                        description="```Unable to fetch MOTD```",
-                        color=Webserver.servers[server]["color"]
-                    )
+                embedelement = discord.Embed(
+                    title="{}{}".format(server[0].upper(), server[1:]),
+                    description="```{}```".format(
+                        "\n".join(
+                        api.info.get(
+                            "motd", {}
+                            ).get(
+                                "decoded", ["Unable to fetch MOTD"]
+                                ))),
+                    color=Webserver.servers[server]["color"]
+                )
 
-                if (api.info["ip"] != None) and (api.info["port"] != None):
+                if ("ip" in api.info) and ("port" in api.info):
                     embedelement.add_field(
                         name="Address",
-                        value="{}:{}".format(Webserver.servers[server]["api"].info["ip"], str(Webserver.servers[server]["api"].info["port"]))
+                        value="{}:{}".format(api.info["ip"], str(api.info["port"]))
                     )
                 else:
                     embedelement.add_field(
@@ -206,56 +202,31 @@ class MainBot:
                         value="Unable to fetch"
                     )
                 
-                if api.info["version"] != None:
-                    if api.info["software"] != None:
-                        embedelement.add_field(
-                            name="Version",
-                            value="{} ({})".format(api.info["version"], api.info["software"])
-                        )
-                    else:
-                        embedelement.add_field(
-                            name="Version",
-                            value=api.info["version"]
-                        )
+                if "software" in api.info:
+                    embedelement.add_field(
+                        name="Version",
+                        value="{} ({})".format(api.info.get("version", "Unable to fetch"), api.info["software"])
+                    )
                 else:
                     embedelement.add_field(
                         name="Version",
-                        value="Unable to fetch"
+                        value=api.info.get("version", "Unable to fetch")
                     )
-                
-                if (api.info["players"]["online"] != None) and (api.info["players"]["max"] != None):
-                    embedelement.add_field(
-                        name="Players",
-                        value="{} / {}".format(str(api.info["players"]["online"]), str(api.info["players"]["max"]))
-                    )
-                else:
-                    embedelement.add_field(
-                        name="Players",
-                        value="Unable to fetch"
-                    )
-                
-                if api.dynmapip != False:
-                    if api.info["servertime"] != None:
-                        embedelement.add_field(
-                            name="Server Time",
-                            value=str(api.info["servertime"])
-                        )
-                    else:
-                        embedelement.add_field(
-                            name="Server Time",
-                            value="Unable to fetch"
-                        )
-                    if api.info["weather"] != None:
-                        embedelement.add_field(
-                            name="Weather",
-                            value=api.info["weather"]
-                        )
-                    else:
-                        embedelement.add_field(
-                            name="Weather",
-                            value="Unable to fetch"
-                        )
 
+                embedelement.add_field(
+                    name="Players",
+                    value="{} / {}".format(str(api.info["players"].get("online", "Unable to fetch")), str(api.info["players"].get("max", "Unable to fetch")))
+                )
+
+                if api.dynmapip != False:
+                    embedelement.add_field(
+                        name="Server Time",
+                        value=str(api.info.get("servertime", "Unable to fetch"))
+                    )
+                    embedelement.add_field(
+                        name="Weather",
+                        value=str(api.info.get("weather", "Unable to fetch"))
+                    )
                     embedelement.add_field(
                         name="Warps",
                         value=str(len(api.info["warps"]))
@@ -279,8 +250,6 @@ class MainBot:
 
                 api = Webserver.servers[server]["api"]
 
-                api.update()
-
                 playeritems = [item for item in api.info["players"]["list"].items()]
 
                 playerpergroup = 20
@@ -288,11 +257,22 @@ class MainBot:
                 groupedplayers = [{keyvalue[0]:keyvalue[1] for keyvalue in playeritems[group:group + playerpergroup]} for group in range(0, len(playeritems), playerpergroup)]
 
                 if len(api.info["players"]["list"]) == 0:
-                    embedelement = discord.Embed(
-                        title=server[0].upper() + server[1:],
-                        description="No Players Online",
-                        color=Webserver.servers[server]["color"]
-                    )
+                    
+                    if api.info.get("pingexception", None) != 200 or (api.info.get("dynmapexception", None) != 200 and api.dynmapip != False):
+                        embedelement = discord.Embed(
+                            title="{}{}".format(server[0].upper(), server[1:]),
+                            description="Unable to fetch Players - Error:\nPing - {}\nDynmap - {}".format(
+                                str(api.info.get("pingexception", "No error message given")),
+                                str(api.info.get("dynmapexception", "No error message given"))
+                                ),
+                            color=Webserver.servers[server]["color"]
+                        )
+                    else:
+                        embedelement = discord.Embed(
+                            title="{}{}".format(server[0].upper(), server[1:]),
+                            description="No Players Online",
+                            color=Webserver.servers[server]["color"]
+                        )
                     embedelement.set_thumbnail(url=api.info["icon"])
                     await ctx.channel.send(
                         content=None,
@@ -302,7 +282,7 @@ class MainBot:
                 for pagenumber in range(0, len(groupedplayers)):
                     group = groupedplayers[pagenumber]
                     embedelement = discord.Embed(
-                        title=server[0].upper() + server[1:],
+                        title="{}{}".format(server[0].upper(), server[1:]),
                         description="Players {} - {} / {}\nPage {} / {}".format(
                             str(pagenumber * playerpergroup + 1),
                             str(pagenumber * playerpergroup + len(group)),
@@ -316,31 +296,22 @@ class MainBot:
                     embedelement.set_thumbnail(url=api.info["icon"])
 
                     for player in group:
-                        if group[player]["nickname"] != None:
-                            nick = "{} ({})".format(player, group[player]["nickname"])
+                        if "nickname" in group[player]:
+                            nick = "{} ({})".format(player.replace("_", "\_"), group[player]["nickname"].replace("_", "\_"))
                         else:
-                            nick = player
+                            nick = player.replace("_", "\_")
 
-                        if group[player]["dimension"] == "Overworld":
-                            dimension = "Overworld"
-                            fetched = True
-                            for axis in group[player]["position"]:
-                                if axis == None:
-                                    fetched = False
-                            if fetched:
-                                position = "({}, {}, {})".format(int(group[player]["position"]["x"]), int(group[player]["position"]["y"]), int(group[player]["position"]["z"]))
+                        if "dimension" in group[player]:
+                            if group[player]["dimension"] == "Overworld":
+                                position = "(X: {}, Y: {}, Z: {})".format(int(group[player].get("x", "Unable to fetch")), int(group[player].get("y", "Unable to fetch")), int(group[player].get("z", "Unable to fetch")))
                             else:
-                                position = "Unable to fetch"
-                        elif group[player]["dimension"] == "Nether or End":
-                            dimension = "Nether or End"
-                            position = "Unable to fetch - Player not in Overworld"
+                                position = "Unable to fetch - Player not in Overworld"
                         else:
-                            dimension = "Unable to fetch"
                             position = "Unable to fetch - Player not on Dynmap"
 
                         embedelement.add_field(
                             name=nick,
-                            value="Dimension: {}\nPosition: {}".format(dimension, position),
+                            value="**Dimension:** {}\n**Position:** {}".format(group[player].get("dimension", "Unable to fetch"), position),
                             inline=False
                         )
 
@@ -360,30 +331,47 @@ class MainBot:
 
                 api = Webserver.servers[server]["api"]
 
-                api.update()
-
                 warpitems = [item for item in api.info["warps"].items()]
 
                 warppergroup = 20
 
                 groupedwarps = [{keyvalue[0]:keyvalue[1] for keyvalue in warpitems[group:group + warppergroup]} for group in range(0, len(warpitems), warppergroup)]
-
+                
                 if len(api.info["warps"]) == 0:
-                    embedelement = discord.Embed(
-                        title=server[0].upper() + server[1:],
-                        description="No Warps on this Server",
-                        color=Webserver.servers[server]["color"]
-                    )
-                    embedelement.set_thumbnail(url=api.info["icon"])
-                    await ctx.channel.send(
-                        content=None,
-                        embed=embedelement
-                    )
+                    if api.dynmapip != False:
+                        if api.info.get("markersexception", None) == 200:
+                            embedelement = discord.Embed(
+                                title="{}{}".format(server[0].upper(), server[1:]),
+                                description="No Warps on this Server",
+                                color=Webserver.servers[server]["color"]
+                            )
+                        else:
+                            embedelement = discord.Embed(
+                                title="{}{}".format(server[0].upper(), server[1:]),
+                                description="Unable to fetch Warps - Error: {}".format(str(api.info.get("markersexception", "No error message given"))),
+                                color=Webserver.servers[server]["color"]
+                            )
+                        embedelement.set_thumbnail(url=api.info["icon"])
+                        await ctx.channel.send(
+                            content=None,
+                            embed=embedelement
+                        )
+                    elif len(queryservers) == 1:
+                        embedelement = discord.Embed(
+                            title="{}{}".format(server[0].upper(), server[1:]),
+                            description="Warps are not enabled on this Server",
+                            color=Webserver.servers[server]["color"]
+                        )
+                        embedelement.set_thumbnail(url=api.info["icon"])
+                        await ctx.channel.send(
+                            content=None,
+                            embed=embedelement
+                        )
 
                 for pagenumber in range(0, len(groupedwarps)):
                     group = groupedwarps[pagenumber]
                     embedelement = discord.Embed(
-                        title=server[0].upper() + server[1:],
+                        title="{}{}".format(server[0].upper(), server[1:]),
                         description="Warps {} - {} / {}\nPage {} / {}".format(
                             str(pagenumber * warppergroup + 1),
                             str(pagenumber * warppergroup + len(group)),
@@ -397,27 +385,13 @@ class MainBot:
                     embedelement.set_thumbnail(url=api.info["icon"])
 
                     for warp in group:
-                        if group[warp]["owner"] != None:
-                            owner = group[warp]["owner"]
-                        else:
-                            owner = "Unable to fetch"
-                        
-                        if group[warp]["description"] != None:
-                            description = group[warp]["description"]
-
-                        fetched = True
-                        for axis in group[warp]["position"]:
-                            if axis == None:
-                                fetched = False
-                        if fetched:
-                            position = "({}, {}, {})".format(int(group[warp]["position"]["x"]), int(group[warp]["position"]["y"]), int(group[warp]["position"]["z"]))
-                        else:
-                            position = "Unable to fetch"
-                        
-
                         embedelement.add_field(
                             name=warp,
-                            value="Owner: {}\nPosition: {}\nDescription: {}".format(owner, position, description),
+                            value="**Owner:** {}\n**Position:** {}\n**Description:** {}".format(
+                                group[warp].get("owner", "Unable to fetch").replace("_", "\_"),
+                                "(X: {}, Y: {}, Z: {})".format(int(group[warp].get("x", "Unable to fetch")), int(group[warp].get("y", "Unable to fetch")), int(group[warp].get("z", "Unable to fetch"))),
+                                group[warp].get("description", "Unable to fetch")
+                                ),
                             inline=False
                         )
 

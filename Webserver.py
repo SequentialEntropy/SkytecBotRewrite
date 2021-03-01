@@ -89,8 +89,11 @@ def serverinfoupdate():
                 "color": 0x969c9f    
             }
         }
-        for server in servers:
-            servers[server]["api"].update()
+        while True:
+            for server in servers:
+                servers[server]["api"].update()
+                print("{} Updated".format(server[0].upper() + server[1:]))
+            time.sleep(60)
     except FileNotFoundError:
         print("ServerInfoModule file not found. Bot will not ping servers.")
 

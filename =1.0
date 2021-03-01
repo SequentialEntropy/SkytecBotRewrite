@@ -1,0 +1,8 @@
+Requirement already satisfied: discord.py in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (1.6.0)
+Requirement already satisfied: aiohttp<3.8.0,>=3.6.0 in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (from discord.py) (3.6.2)
+Requirement already satisfied: yarl<2.0,>=1.0 in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (from aiohttp<3.8.0,>=3.6.0->discord.py) (1.4.2)
+Requirement already satisfied: multidict<5.0,>=4.5 in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (from aiohttp<3.8.0,>=3.6.0->discord.py) (4.7.6)
+Requirement already satisfied: attrs>=17.3.0 in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (from aiohttp<3.8.0,>=3.6.0->discord.py) (19.3.0)
+Requirement already satisfied: chardet<4.0,>=2.0 in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (from aiohttp<3.8.0,>=3.6.0->discord.py) (3.0.4)
+Requirement already satisfied: async-timeout<4.0,>=3.0 in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (from aiohttp<3.8.0,>=3.6.0->discord.py) (3.0.1)
+Requirement already satisfied: idna>=2.0 in /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages (from yarl<2.0,>=1.0->aiohttp<3.8.0,>=3.6.0->discord.py) (2.9)
