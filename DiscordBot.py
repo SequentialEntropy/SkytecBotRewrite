@@ -215,12 +215,11 @@ class MainBot:
                 embedelement = discord.Embed(
                     title=server.capitalize(),
                     description="```{}```".format(
-                        "\n".join(
                         api.info.get(
                             "motd", {}
                             ).get(
-                                "decoded", ["Unable to fetch MOTD"]
-                                ))),
+                                "decoded", "Unable to fetch MOTD"
+                                )),
                     color=self.flaskserver.servers[server]["color"]
                 )
 
@@ -235,16 +234,10 @@ class MainBot:
                         value="Unable to fetch"
                     )
                 
-                if "software" in api.info:
-                    embedelement.add_field(
-                        name="Version",
-                        value="{} ({})".format(api.info.get("version", "Unable to fetch"), api.info["software"])
-                    )
-                else:
-                    embedelement.add_field(
-                        name="Version",
-                        value=api.info.get("version", "Unable to fetch")
-                    )
+                embedelement.add_field(
+                    name="Version",
+                    value=api.info.get("version", {}).get("decoded", "Unable to fetch")
+                )
 
                 embedelement.add_field(
                     name="Players",
