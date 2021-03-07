@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import os
 import datetime
+import json
+import asyncio
 
 try:
     from SetEnviron import environ
@@ -11,34 +13,65 @@ except FileNotFoundError:
 
 try:
     import Webserver
-    Webserver.server()
 except FileNotFoundError:
     print("Webserver file not found. Bot will not be able to stay online nor receive data from the database.")
 
-sizes = ["small", "medium", "large"]
 staffrole = 653410679424024586
 
-botcommands = {
-    "-ping": "Sends a message back to the author",
-    "-projects": "Shows a list of current Skytec City projects",
-    "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
-    "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
-    "-uptime": "Tells uptime information of the Skytec City bot",
-    "-server <server (leave blank for all servers)>": "Get information about the Altitude servers",
-    "-players <server (leave blank for all servers)>": "Get information about online players",
-    "-warps <server (leave blank for all servers)>": "Get information about warps",
-    "-help": "Sends a list of all Skytec City commands"
-}
+with open("./Commands.json", "r") as reader:
+    strcommands = reader.read()
+
+botcommands = json.loads(strcommands)
 
 class MainBot:
 
     def __init__(self, token):
+        self.flaskserver = Webserver.FlaskWebserver(parent=self)
         self.bot = commands.Bot(command_prefix=("-"))
         self.bot.remove_command("help")
         self.token = token
         self.startup = datetime.datetime.now()
         self.define_commands()
+        self.event_loop = asyncio.get_event_loop()
         self.bot.run(self.token)
+
+    async def serverupdate(self):
+        print("Bot detected project update.")
+        # servers = self.flaskserver.servers
+        # for server in servers:
+        #     playerslast = servers[server]["api"].info.get("players", {}).get("list", [])
+        #     playersnow = servers[server]["api"].infolast.get("players", {}).get("list", [])
+        #     playersjoined = set(playerslast) - set(playersnow)
+        #     for player in playersjoined:
+        #         embedelement = discord.Embed(
+        #             title=server.capitalize(),
+        #             description="{} joined the server.".format(player),
+        #             color=servers[server]["color"]
+        #         )
+
+        #         embedelement.set_thumbnail(url=servers[server]["api"].info.get("icon", ""))
+
+        #         channel = self.bot.get_channel(817008411001749555)
+        #         await channel.send(
+        #             content=None,
+        #             embed=embedelement
+        #         )
+
+        #     playersleft = set(playersnow) - set(playerslast)
+        #     for player in playersleft:
+        #         embedelement = discord.Embed(
+        #             title=server.capitalize(),
+        #             description="{} left the server.".format(player),
+        #             color=servers[server]["color"]
+        #         )
+
+        #         embedelement.set_thumbnail(url=servers[server]["api"].info.get("icon", ""))
+
+        #         channel = self.bot.get_channel(817008411001749555)
+        #         await channel.send(
+        #             content=None,
+        #             embed=embedelement
+        #         )
 
     def define_commands(self):
 
@@ -73,10 +106,10 @@ class MainBot:
                 description="Shows a list of current Skytec City projects",
                 color=discord.Color.dark_blue()
             )
-            for project in range(0, len(Webserver.updatedprojects)):
-                text = "Description: {}\nEstimate Time Completion: {}".format(str(Webserver.updatedprojects[project]["description"]), str(Webserver.updatedprojects[project]["estimated-time"].strftime("%b %d %Y")))
+            for project in range(0, len(self.flaskserver.updatedprojects)):
+                text = "Description: {}\nEstimate Time Completion: {}".format(str(self.flaskserver.updatedprojects[project]["description"]), str(self.flaskserver.updatedprojects[project]["estimated-time"].strftime("%b %d %Y")))
                 embedelement.add_field(
-                    name=str(Webserver.updatedprojects[project]["name"]),
+                    name=str(self.flaskserver.updatedprojects[project]["name"]),
                     value=text,
                     inline=False
                 )
@@ -170,17 +203,17 @@ class MainBot:
         @self.bot.command()
         async def server(ctx, server=None):
 
-            if server in Webserver.servers:
+            if server in self.flaskserver.servers:
                 queryservers = [server]
             else:
-                queryservers = [element for element in Webserver.servers]
+                queryservers = [element for element in self.flaskserver.servers]
 
             for server in queryservers:
 
-                api = Webserver.servers[server]["api"]
+                api = self.flaskserver.servers[server]["api"]
 
                 embedelement = discord.Embed(
-                    title="{}{}".format(server[0].upper(), server[1:]),
+                    title=server.capitalize(),
                     description="```{}```".format(
                         "\n".join(
                         api.info.get(
@@ -188,7 +221,7 @@ class MainBot:
                             ).get(
                                 "decoded", ["Unable to fetch MOTD"]
                                 ))),
-                    color=Webserver.servers[server]["color"]
+                    color=self.flaskserver.servers[server]["color"]
                 )
 
                 if ("ip" in api.info) and ("port" in api.info):
@@ -232,7 +265,7 @@ class MainBot:
                         value=str(len(api.info["warps"]))
                     )
 
-                embedelement.set_thumbnail(url=api.info["icon"])
+                embedelement.set_thumbnail(url=api.info.get("icon", ""))
 
                 await ctx.channel.send(
                     content=None,
@@ -241,14 +274,14 @@ class MainBot:
 
         @self.bot.command()
         async def players(ctx, server=None):
-            if server in Webserver.servers:
+            if server in self.flaskserver.servers:
                 queryservers = [server]
             else:
-                queryservers = [element for element in Webserver.servers]
+                queryservers = [element for element in self.flaskserver.servers]
 
             for server in queryservers:
 
-                api = Webserver.servers[server]["api"]
+                api = self.flaskserver.servers[server]["api"]
 
                 playeritems = [item for item in api.info["players"]["list"].items()]
 
@@ -260,20 +293,20 @@ class MainBot:
                     
                     if api.info.get("pingexception", None) != 200 or (api.info.get("dynmapexception", None) != 200 and api.dynmapip != False):
                         embedelement = discord.Embed(
-                            title="{}{}".format(server[0].upper(), server[1:]),
+                            title=server.capitalize(),
                             description="Unable to fetch Players - Error:\nPing - {}\nDynmap - {}".format(
                                 str(api.info.get("pingexception", "No error message given")),
                                 str(api.info.get("dynmapexception", "No error message given"))
                                 ),
-                            color=Webserver.servers[server]["color"]
+                            color=self.flaskserver.servers[server]["color"]
                         )
                     else:
                         embedelement = discord.Embed(
-                            title="{}{}".format(server[0].upper(), server[1:]),
+                            title=server.capitalize(),
                             description="No Players Online",
-                            color=Webserver.servers[server]["color"]
+                            color=self.flaskserver.servers[server]["color"]
                         )
-                    embedelement.set_thumbnail(url=api.info["icon"])
+                    embedelement.set_thumbnail(url=api.info.get("icon", ""))
                     await ctx.channel.send(
                         content=None,
                         embed=embedelement
@@ -282,7 +315,7 @@ class MainBot:
                 for pagenumber in range(0, len(groupedplayers)):
                     group = groupedplayers[pagenumber]
                     embedelement = discord.Embed(
-                        title="{}{}".format(server[0].upper(), server[1:]),
+                        title=server.capitalize(),
                         description="Players {} - {} / {}\nPage {} / {}".format(
                             str(pagenumber * playerpergroup + 1),
                             str(pagenumber * playerpergroup + len(group)),
@@ -290,10 +323,10 @@ class MainBot:
                             str(pagenumber + 1),
                             str(len(groupedplayers))
                         ),
-                        color=Webserver.servers[server]["color"]
+                        color=self.flaskserver.servers[server]["color"]
                     )
 
-                    embedelement.set_thumbnail(url=api.info["icon"])
+                    embedelement.set_thumbnail(url=api.info.get("icon", ""))
 
                     for player in group:
                         if "nickname" in group[player]:
@@ -322,14 +355,14 @@ class MainBot:
 
         @self.bot.command()
         async def warps(ctx, server=None):
-            if server in Webserver.servers:
+            if server in self.flaskserver.servers:
                 queryservers = [server]
             else:
-                queryservers = [element for element in Webserver.servers]
+                queryservers = [element for element in self.flaskserver.servers]
 
             for server in queryservers:
 
-                api = Webserver.servers[server]["api"]
+                api = self.flaskserver.servers[server]["api"]
 
                 warpitems = [item for item in api.info["warps"].items()]
 
@@ -341,28 +374,28 @@ class MainBot:
                     if api.dynmapip != False:
                         if api.info.get("markersexception", None) == 200:
                             embedelement = discord.Embed(
-                                title="{}{}".format(server[0].upper(), server[1:]),
+                                title=server.capitalize(),
                                 description="No Warps on this Server",
-                                color=Webserver.servers[server]["color"]
+                                color=self.flaskserver.servers[server]["color"]
                             )
                         else:
                             embedelement = discord.Embed(
-                                title="{}{}".format(server[0].upper(), server[1:]),
+                                title=server.capitalize(),
                                 description="Unable to fetch Warps - Error: {}".format(str(api.info.get("markersexception", "No error message given"))),
-                                color=Webserver.servers[server]["color"]
+                                color=self.flaskserver.servers[server]["color"]
                             )
-                        embedelement.set_thumbnail(url=api.info["icon"])
+                        embedelement.set_thumbnail(url=api.info.get("icon", ""))
                         await ctx.channel.send(
                             content=None,
                             embed=embedelement
                         )
                     elif len(queryservers) == 1:
                         embedelement = discord.Embed(
-                            title="{}{}".format(server[0].upper(), server[1:]),
+                            title=server.capitalize(),
                             description="Warps are not enabled on this Server",
-                            color=Webserver.servers[server]["color"]
+                            color=self.flaskserver.servers[server]["color"]
                         )
-                        embedelement.set_thumbnail(url=api.info["icon"])
+                        embedelement.set_thumbnail(url=api.info.get("icon", ""))
                         await ctx.channel.send(
                             content=None,
                             embed=embedelement
@@ -371,7 +404,7 @@ class MainBot:
                 for pagenumber in range(0, len(groupedwarps)):
                     group = groupedwarps[pagenumber]
                     embedelement = discord.Embed(
-                        title="{}{}".format(server[0].upper(), server[1:]),
+                        title=server.capitalize(),
                         description="Warps {} - {} / {}\nPage {} / {}".format(
                             str(pagenumber * warppergroup + 1),
                             str(pagenumber * warppergroup + len(group)),
@@ -379,10 +412,10 @@ class MainBot:
                             str(pagenumber + 1),
                             str(len(groupedwarps))
                         ),
-                        color=Webserver.servers[server]["color"]
+                        color=self.flaskserver.servers[server]["color"]
                     )
 
-                    embedelement.set_thumbnail(url=api.info["icon"])
+                    embedelement.set_thumbnail(url=api.info.get("icon", ""))
 
                     for warp in group:
                         embedelement.add_field(
@@ -426,4 +459,4 @@ if __name__ == "__main__":
         print("Environment Variables not found. Unable to assign token.")
     except SyntaxError:
         print("Syntax Error")
-    Webserver.kill()
+    main_bot.flaskserver.kill()

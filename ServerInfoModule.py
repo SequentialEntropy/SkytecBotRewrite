@@ -2,6 +2,7 @@ import requests
 import json
 import html
 import html2text
+import mcstatus
 
 class Server:
     def __init__(self, ip, dynmapip=False, world=False):

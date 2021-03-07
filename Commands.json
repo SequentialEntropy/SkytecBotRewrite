@@ -1,0 +1,14 @@
+{
+    "-ping": "Sends a message back to the author",
+    "-projects": "Shows a list of current Skytec City projects",
+    "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
+    "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",
+    "-uptime": "Tells uptime information of the Skytec City bot",
+    "-server": "Get information about all Altitude servers",
+    "-server <server>": "Get information about an Altitude server",
+    "-players": "Get information about online players for all servers",
+    "-players <server>": "Get information about online players",
+    "-warps": "Get information about warps for all servers",
+    "-warps <server>": "Get information about warps",
+    "-help": "Sends a list of all Skytec City commands"
+}

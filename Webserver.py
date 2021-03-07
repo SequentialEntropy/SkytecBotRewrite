@@ -2,64 +2,84 @@ from flask import Flask, jsonify
 from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
+import asyncio
 
 try:
     import FirebaseConnection
 except FileNotFoundError:
     print("FirebaseConnection file not found. Website will not be able to access the database.")
 
-app = Flask(__name__)
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+try:
+    import ServerInfoModule
+except FileNotFoundError:
+    print("ServerInfoModule file not found. Bot will not ping servers.")
 
-@app.route("/")
-def main():
-    global updatedprojects
-    projecttext = "\n".join([("Project Name: {}, Project Description: {}, Estimate Time Completion: {}".format(project["name"], project["description"], project["estimated-time"].strftime("%b %d %Y"))) for project in updatedprojects])
-    text = "Bot is running.\n" + projecttext
-    return text
+class FlaskWebserver:
+    def __init__(self, ip="0.0.0.0", port=8080, parent=None):
+        self.ip = ip
+        self.port = port
+        self._parent = parent
+        self.app = Flask(__name__)
+        self.cors = CORS(self.app)
+        self.app.config["CORS_HEADERS"] = "Content-Type"
+        self.server()
 
-@app.route("/projects/")
-@cross_origin()
-def projects():
-    global updatedprojects
-    print(str(updatedprojects))
-    return jsonify(updatedprojects)
+    def appaddresses(self):
+        
+        @self.app.route("/")
+        def main():
+            return "Bot and api are online."
+        
+        @self.app.route("/projects/")
+        @cross_origin()
+        def projects():
+            return str(self.updatedprojects)
 
-def server():
-    print("Server code running.")
-    firebaselink = Thread(target=firebaseupdate)
-    firebaselink.daemon = True
-    firebaselink.start()
-    serverinfolink = Thread(target=serverinfoupdate)
-    serverinfolink.daemon = True
-    serverinfolink.start()
-    time.sleep(1)
-    server = Thread(target=run)
-    server.daemon = True
-    server.start()
-    print("Server started")
-    return
+    def run(self):
+        self.appaddresses()
+        try:
+            self.app.run(host=self.ip, port=self.port)
+        except RuntimeError:
+            print("Shutting down server, RuntimeError caught")
 
-def kill():
-    print("Proceeding to kill webserver.")
-    raise RuntimeError("Shutting down server")
-    print("Shutting down server, RuntimeError raised")
-    return
+        
+    def server(self):
+        print("Server code running.")
+        print("Firebase Linking.")
+        self.firebaselink = Thread(target=self.firebaseupdate)
+        self.firebaselink.daemon = True
+        self.firebaselink.start()
 
-def firebaseupdate():
-    global updatedprojects
-    while True:
-        updatedprojects = FirebaseConnection.firebasefetch("projects")
-        if updatedprojects != None:
-            print("Projects Updated")
-        time.sleep(3600)
+        print("Server Info Linking.")
+        self.serverinfolink = Thread(target=self.serverinfoupdate)
+        self.serverinfolink.daemon = True
+        self.serverinfolink.start()
 
-def serverinfoupdate():
-    try:
-        import ServerInfoModule
-        global servers
-        servers = {
+        time.sleep(1)
+
+        print("Server running.")
+        self.serverrun = Thread(target=self.run)
+        self.serverrun.daemon = True
+        self.serverrun.start()
+
+        print("Server started.")
+        return
+
+    def kill(self):
+        print("Proceeding to kill webserver.")
+        raise RuntimeError("Shutting down server")
+        print("Shutting down server, RuntimeError raised")
+        return
+
+    def firebaseupdate(self):
+        while True:
+            self.updatedprojects = FirebaseConnection.firebasefetch("projects")
+            if self.updatedprojects != None:
+                print("Projects Updated")
+            time.sleep(3600)
+
+    def serverinfoupdate(self):
+        self.servers = {
             "lobby": {
                 "api": ServerInfoModule.Server("lobby.alttd.com"),
                 "color": 0x969c9f
@@ -89,18 +109,16 @@ def serverinfoupdate():
                 "color": 0x969c9f    
             }
         }
+        print("Server updating.")
         while True:
-            for server in servers:
-                servers[server]["api"].update()
-                print("{} Updated".format(server[0].upper() + server[1:]))
-            time.sleep(60)
-    except FileNotFoundError:
-        print("ServerInfoModule file not found. Bot will not ping servers.")
+            for server in self.servers:
+                self.servers[server]["api"].update()
+                print("{} Updated".format(server.capitalize()))
+            if self._parent != None:
+                loop = self._parent.event_loop
+                # task = loop.create_task(self._parent.serverupdate())
+                # asyncio.run_coroutine_threadsafe(task, loop)
 
-def run():
-    try:
-        app.run(host="0.0.0.0", port=8080)
-        print("Webserver is ready.")
-    except RuntimeError:
-        print("Shutting down server, RuntimeError caught")
-    return
+
+                loop.call_soon_threadsafe(asyncio.ensure_future, self._parent.serverupdate())
+            time.sleep(60)
