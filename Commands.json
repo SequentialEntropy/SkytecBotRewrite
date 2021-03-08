@@ -1,5 +1,6 @@
 {
     "-ping": "Sends a message back to the author",
+    "-clear <messages>": "Deletes multiple messages at once [Requires Staff Role]",
     "-projects": "Shows a list of current Skytec City projects",
     "-status <type> <message>": "Changes the status of the Skytec City bot [Requires Staff Role]",
     "-kill": "Shuts down the Skytec City bot for maintenance [Requires Staff Role]",

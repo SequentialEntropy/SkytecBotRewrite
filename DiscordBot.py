@@ -184,6 +184,12 @@ class MainBot:
             await self.bot.logout()
 
         @self.bot.command()
+        @commands.has_any_role(staffrole)
+        async def clear(ctx, amount=1):
+            if amount < 100:
+                await ctx.channel.purge(limit=amount + 1)
+
+        @self.bot.command()
         async def uptime(ctx):
             embedelement = discord.Embed(
                 title="Uptime Command",
