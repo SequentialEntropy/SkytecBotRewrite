@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from google.cloud.firestore import Increment
 import os
 
 cred = credentials.Certificate({
@@ -22,4 +23,21 @@ db = firestore.client()
 def firebasefetch(collection):
     global db
     documents = db.collection(collection).stream()
-    return [document.to_dict() for document in documents]
+    return {document.id: document.to_dict() for document in documents}
+
+def firebasenew(collection, document, data):
+	global db
+	if document == None:
+		documentref = db.collection(collection).document()
+	else:
+		documentref = db.collection(collection).document(document)
+	documentref.set(data)
+	return documentref.id
+
+def firebasedelete(collection, document):
+	global db
+	db.collection(collection).document(document).delete()
+
+def firebaseincrement(collection, document, field, value):
+	global db
+	db.collection(collection).document(document).update({field: Increment(value)})

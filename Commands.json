@@ -11,5 +11,6 @@
     "-players <server>": "Get information about online players",
     "-warps": "Get information about warps for all servers",
     "-warps <server>": "Get information about warps",
+    "-playernotify <username> <type [all/join/leave]> <amount> <server [lobby/valley/summit/meadow/atoll/creative/events]>": "Create a player notification ",
     "-help": "Sends a list of all Skytec City commands"
 }

@@ -116,9 +116,5 @@ class FlaskWebserver:
                 print("{} Updated".format(server.capitalize()))
             if self._parent != None:
                 loop = self._parent.event_loop
-                # task = loop.create_task(self._parent.serverupdate())
-                # asyncio.run_coroutine_threadsafe(task, loop)
-
-
                 loop.call_soon_threadsafe(asyncio.ensure_future, self._parent.serverupdate())
             time.sleep(60)

@@ -4,6 +4,8 @@ import os
 import datetime
 import json
 import asyncio
+import requests
+import json
 
 try:
     from SetEnviron import environ
@@ -16,6 +18,8 @@ try:
 except FileNotFoundError:
     print("Webserver file not found. Bot will not be able to stay online nor receive data from the database.")
 
+import FirebaseConnection
+
 staffrole = 653410679424024586
 
 with open("./Commands.json", "r") as reader:
@@ -26,6 +30,7 @@ botcommands = json.loads(strcommands)
 class MainBot:
 
     def __init__(self, token):
+        self.fetch_notifications()
         self.flaskserver = Webserver.FlaskWebserver(parent=self)
         self.bot = commands.Bot(command_prefix=("-"))
         self.bot.remove_command("help")
@@ -37,41 +42,132 @@ class MainBot:
 
     async def serverupdate(self):
         print("Bot detected project update.")
-        # servers = self.flaskserver.servers
-        # for server in servers:
-        #     playerslast = servers[server]["api"].info.get("players", {}).get("list", [])
-        #     playersnow = servers[server]["api"].infolast.get("players", {}).get("list", [])
-        #     playersjoined = set(playerslast) - set(playersnow)
-        #     for player in playersjoined:
-        #         embedelement = discord.Embed(
-        #             title=server.capitalize(),
-        #             description="{} joined the server.".format(player),
-        #             color=servers[server]["color"]
-        #         )
 
-        #         embedelement.set_thumbnail(url=servers[server]["api"].info.get("icon", ""))
+        channel = self.bot.get_channel(817008411001749555)
 
-        #         channel = self.bot.get_channel(817008411001749555)
-        #         await channel.send(
-        #             content=None,
-        #             embed=embedelement
-        #         )
+        servers = self.flaskserver.servers
 
-        #     playersleft = set(playersnow) - set(playerslast)
-        #     for player in playersleft:
-        #         embedelement = discord.Embed(
-        #             title=server.capitalize(),
-        #             description="{} left the server.".format(player),
-        #             color=servers[server]["color"]
-        #         )
+        allplayers = {}
+        allplayersjoined = {}
+        allplayersleft = {}
 
-        #         embedelement.set_thumbnail(url=servers[server]["api"].info.get("icon", ""))
+        for server in servers:
+            playerslast = servers[server]["api"].info.get("players", {}).get("list", {})
+            playersnow = servers[server]["api"].infolast.get("players", {}).get("list", {})
+            playersjoined = set(playerslast) - set(playersnow)
+            playersleft = set(playersnow) - set(playerslast)
+            allplayers.update({player: server for player in playersnow})
+            allplayersjoined.update({player: server for player in playersjoined})
+            allplayersleft.update({player: server for player in playersleft})
 
-        #         channel = self.bot.get_channel(817008411001749555)
-        #         await channel.send(
-        #             content=None,
-        #             embed=embedelement
-        #         )
+        for notification in self.notifications:
+
+            exception = None
+            for attempt in range(3):
+                try:
+                    rawnames = requests.get("https://api.mojang.com/user/profiles/{}/names".format(self.notifications[notification]["mcuuid"]), timeout=5)
+                    statuscode = rawnames.status_code
+                    exception = statuscode
+                    if statuscode == 200:
+                        names = json.loads(rawnames.text)
+                        break
+                    else:
+                        exception = statuscode
+                except Exception as e:
+                    exception = e
+
+            if exception == 200:
+
+                highesttimestamp = 0
+
+                decrement = False
+
+                for namedict in names:
+                    if namedict.get("changedToAt", 1) > highesttimestamp:
+                        highesttimestamp = namedict.get("changedToAt", 0)
+                        currentname = namedict["name"]
+                
+                if self.notifications[notification]["server"] == "all":
+                    notifserver = [server for server in servers]
+                else:
+                    notifserver = [self.notifications[notification]["server"]]
+
+                if (currentname in allplayersjoined) and (currentname in allplayersleft) and (self.notifications[notification]["type"] in ["all", "join", "leave"]) and ((allplayersjoined.get(currentname, None) in notifserver) or (allplayersleft.get(currentname, None) in notifserver)):
+                    
+                    embedelement = discord.Embed(
+                        title="Notification",
+                        description="Notifies player events",
+                        color=discord.Color.orange()
+                    )
+
+                    embedelement.add_field(
+                        name="Player moved servers",
+                        value="**{}** moved from the server **{}** to the server **{}**.".format(currentname, allplayersleft[currentname].capitalize(), allplayersjoined[currentname].capitalize())
+                    )
+
+                    user = await self.bot.fetch_user(self.notifications[notification]["dcuser"])
+
+                    await channel.send(
+                        content=user.mention,
+                        embed=embedelement
+                    )
+
+                    decrement = True
+
+                elif (currentname in allplayersjoined) and (self.notifications[notification]["type"] in ["all", "join"]) and (allplayersjoined.get(currentname, None) in notifserver):
+
+                    embedelement = discord.Embed(
+                        title="Notification",
+                        description="Notifies player events",
+                        color=discord.Color.orange()
+                    )
+
+                    embedelement.add_field(
+                        name="Player joined a server",
+                        value="**{}** joined the server **{}**.".format(currentname, allplayersjoined[currentname].capitalize())
+                    )
+
+                    user = await self.bot.fetch_user(self.notifications[notification]["dcuser"])
+
+                    await channel.send(
+                        content=user.mention,
+                        embed=embedelement
+                    )          
+
+                    decrement = True
+                
+                elif (currentname in allplayersleft) and (self.notifications[notification]["type"] in ["all", "leave"]) and (allplayersleft.get(currentname, None) in notifserver):
+
+                    embedelement = discord.Embed(
+                        title="Notification",
+                        description="Notifies player events",
+                        color=discord.Color.orange()
+                    )
+
+                    embedelement.add_field(
+                        name="Player left a server",
+                        value="**{}** left the server **{}**.".format(currentname, allplayersleft[currentname].capitalize())
+                    )
+
+                    user = await self.bot.fetch_user(self.notifications[notification]["dcuser"])
+
+                    await channel.send(
+                        content=user.mention,
+                        embed=embedelement
+                    )                    
+
+                    decrement = True
+
+                if decrement:
+                    if self.notifications[notification]["amount"] == 1:
+                        FirebaseConnection.firebasedelete(notification)
+                        self.notifications.pop(notification)
+                    elif self.notifications[notification]["amount"] > 1:
+                        FirebaseConnection.firebaseincrement("notifications", notification, "amount", -1)
+                        self.notifications[notification]["amount"] -= 1
+
+    def fetch_notifications(self):
+        self.notifications = FirebaseConnection.firebasefetch("notifications")
 
     def define_commands(self):
 
@@ -90,7 +186,7 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Pinged by {}".format(ctx.message.author.display_name),
-                value="Pong",
+                value="Pong!",
                 inline=False
             )
             await ctx.channel.send(
@@ -106,7 +202,7 @@ class MainBot:
                 description="Shows a list of current Skytec City projects",
                 color=discord.Color.dark_blue()
             )
-            for project in range(0, len(self.flaskserver.updatedprojects)):
+            for project in self.flaskserver.updatedprojects:
                 text = "Description: {}\nEstimate Time Completion: {}".format(str(self.flaskserver.updatedprojects[project]["description"]), str(self.flaskserver.updatedprojects[project]["estimated-time"].strftime("%b %d %Y")))
                 embedelement.add_field(
                     name=str(self.flaskserver.updatedprojects[project]["name"]),
@@ -130,8 +226,6 @@ class MainBot:
                 await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.listening))
             elif statustype == "streaming":
                 await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.streaming))
-            elif statustype == "custom":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.custom))
             else:
                 embedelement = discord.Embed(
                     title="Status Command",
@@ -140,7 +234,7 @@ class MainBot:
                 )
                 embedelement.add_field(
                     name="Status was not changed",
-                    value="Invalid Status Type [{}] Please choose from [Playing/Watching/Listening/Streaming/Custom]".format(statustype),
+                    value="Invalid Status Type [{}]. Please choose from [playing/watching/listening/streaming].".format(statustype),
                     inline=False
                 )
                 await ctx.channel.send(
@@ -155,7 +249,7 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Status changed by {}".format(ctx.message.author.display_name),
-                value="Status changed to type [{}] with message [{}]".format(statustype, message),
+                value="Status changed to type [{}] with message [{}].".format(statustype, message),
                 inline=False
             )
             await ctx.channel.send(
@@ -173,7 +267,7 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Skytec City bot killed by {}".format(ctx.message.author.display_name),
-                value="Skytec City bot is now shutting down for maintenance",
+                value="Skytec City bot is now shutting down for maintenance.",
                 inline=False
             )
             await ctx.channel.send(
@@ -198,7 +292,7 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Skytec City bot startup time",
-                value="Skytec City bot started up on [{}]".format(self.startup.strftime("%b %d %Y %H:%M:%S")),
+                value="Skytec City bot started up on [{}].".format(self.startup.strftime("%b %d %Y %H:%M:%S")),
                 inline=False
             )
             await ctx.channel.send(
@@ -431,6 +525,181 @@ class MainBot:
                         content=None,
                         embed=embedelement
                     )
+
+        @self.bot.command()
+        async def playernotify(ctx, username, notiftype, amount, server):
+            exception = None
+            for attempt in range(3):
+                try:
+                    rawuuid = requests.get("https://api.mojang.com/users/profiles/minecraft/" + username, timeout=5)
+                    statuscode = rawuuid.status_code
+                    exception = statuscode
+                    if statuscode == 200:
+                        uuiddict = json.loads(rawuuid.text)
+                        uuid = uuiddict["id"]
+                        break
+                    else:
+                        exception = statuscode
+                except Exception as e:
+                    exception = e
+            if notiftype in ["all", "join", "leave"]:
+                try:
+                    amount = int(amount)
+                    if amount >= 0:
+                        if (server in self.flaskserver.servers) or (server == "all"):
+                            if exception == 200:
+
+                                data = {
+                                    "dcuser": str(ctx.message.author.id),
+                                    "mcuuid": uuid,
+                                    "type": notiftype,
+                                    "amount": amount,
+                                    "server": server
+                                }
+                                docid = FirebaseConnection.firebasenew("notifications", None, data)
+                                self.notifications.update({docid: data})
+
+                                if notiftype == "all":
+                                    when = "**joins or leaves**"
+                                else:
+                                    when = "**{}**".format(notiftype)
+
+                                if amount == 0:
+                                    times = "**every time**"
+                                elif amount == 1:
+                                    times = "**once**"
+                                else:
+                                    times = "up to **{} times**".format(amount)
+
+                                if server == "all":
+                                    where = "**any** server"
+                                else:
+                                    where = "the server **{}**".format(server.capitalize())
+
+                                if notiftype == "all":
+
+                                    embedelement = discord.Embed(
+                                        title="Notification Command",
+                                        description="Create a player notification",
+                                        color=discord.Color.dark_orange()
+                                    )
+
+                                    embedelement.add_field(
+                                        name="Notification successfully created",
+                                        value="Notifying {} when **{}** {} {} {}.".format(ctx.message.author.mention, username, when, where, times)
+                                    )
+
+                                    await ctx.channel.send(
+                                        content=None,
+                                        embed=embedelement
+                                    )
+
+                            elif exception == 204:
+
+                                embedelement = discord.Embed(
+                                    title="Notification Command",
+                                    description="Create a player notification",
+                                    color=discord.Color.dark_orange()
+                                )
+
+                                embedelement.add_field(
+                                    name="Notification was not created",
+                                    value="Player [{}] does not exist.".format(username)
+                                )
+
+                                await ctx.channel.send(
+                                    content=None,
+                                    embed=embedelement
+                                )
+
+                            else:
+
+                                embedelement = discord.Embed(
+                                    title="Notification Command",
+                                    description="Create a player notification",
+                                    color=discord.Color.dark_orange()
+                                )
+
+                                embedelement.add_field(
+                                    name="Notification was not created",
+                                    value="Error - " + str(exception)
+                                )
+
+                                await ctx.channel.send(
+                                    content=None,
+                                    embed=embedelement
+                                )
+                        else:
+
+                            embedelement = discord.Embed(
+                                title="Notification Command",
+                                description="Create a player notification",
+                                color=discord.Color.dark_orange()
+                            )
+
+                            embedelement.add_field(
+                                name="Notification was not created",
+                                value="Invalid server [{}]. Please choose from [{}].".format(server, "/".join([server for server in self.flaskserver.servers]))
+                            )
+
+                            await ctx.channel.send(
+                                content=None,
+                                embed=embedelement
+                            )
+                        
+                    else:
+
+                        embedelement = discord.Embed(
+                            title="Notification Command",
+                            description="Create a player notification",
+                            color=discord.Color.dark_orange()
+                        )
+
+                        embedelement.add_field(
+                            name="Notification was not created",
+                            value="Invalid amount [{}]. Amount must be 0 or larger.".format(amount)
+                        )
+
+                        await ctx.channel.send(
+                            content=None,
+                            embed=embedelement
+                        )               
+
+                except ValueError:
+
+                    embedelement = discord.Embed(
+                        title="Notification Command",
+                        description="Create a player notification",
+                        color=discord.Color.dark_orange()
+                    )
+
+                    embedelement.add_field(
+                        name="Notification was not created",
+                        value="Invalid amount [{}]. Amount must be an integer.".format(amount)
+                    )
+
+                    await ctx.channel.send(
+                        content=None,
+                        embed=embedelement
+                    )
+
+            else:
+
+                embedelement = discord.Embed(
+                    title="Notification Command",
+                    description="Create a player notification",
+                    color=discord.Color.dark_orange()
+                )
+
+                embedelement.add_field(
+                    name="Notification was not created",
+                    value="Invalid notification type [{}]. Please choose from [all/join/leave].".format(notiftype)
+                )
+
+                await ctx.channel.send(
+                    content=None,
+                    embed=embedelement
+                )
 
         @self.bot.command()
         async def help(ctx):
