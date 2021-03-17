@@ -173,9 +173,28 @@ class MainBot:
 
         @self.bot.event
         async def on_ready():
+
+            settings = FirebaseConnection.firebasefetch("settings")
+            statustype = settings["status"]["statustype"]
+            args = settings["status"]["args"]
+
+            if statustype == "playing":
+                message = " ".join([arg for arg in args])
+                await self.bot.change_presence(activity=discord.Game(name=message))
+
+            elif statustype == "streaming":
+                message = " ".join([arg for arg in args[1:]])
+                await self.bot.change_presence(activity=discord.Streaming(name=message, url=args[0]))
+
+            elif statustype == "listening":
+                message = " ".join([arg for arg in args])
+                await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=message))
+
+            elif statustype == "watching":
+                message = " ".join([arg for arg in args])
+                await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=message))
+
             print("Bot is ready.")
-            await self.bot.change_presence(activity=discord.Activity(name="Bot Maintenance", type=discord.ActivityType.playing))
-            #await self.bot.change_presence(activity=discord.Streaming(name="Bot Maintenance", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
 
         @self.bot.command()
         async def ping(ctx):
@@ -217,15 +236,23 @@ class MainBot:
         @self.bot.command()
         @commands.has_any_role(staffrole)
         async def status(ctx, statustype, *args, **kwargs):
-            message = " ".join([arg for arg in args])
+
             if statustype == "playing":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.playing))
-            elif statustype == "watching":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.watching))
-            elif statustype == "listening":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.listening))
+                message = " ".join([arg for arg in args])
+                await self.bot.change_presence(activity=discord.Game(name=message))
+
             elif statustype == "streaming":
-                await self.bot.change_presence(activity=discord.Activity(name=message, type=discord.ActivityType.streaming))
+                message = " ".join([arg for arg in args[1:]])
+                await self.bot.change_presence(activity=discord.Streaming(name=message, url=args[0]))
+
+            elif statustype == "listening":
+                message = " ".join([arg for arg in args])
+                await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=message))
+
+            elif statustype == "watching":
+                message = " ".join([arg for arg in args])
+                await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=message))
+                
             else:
                 embedelement = discord.Embed(
                     title="Status Command",
@@ -242,16 +269,33 @@ class MainBot:
                     embed=embedelement
                 )
                 return
+
+            FirebaseConnection.firebasenew("settings", "status",
+                {
+                    "statustype": statustype,
+                    "args": [arg for arg in args]
+                }
+            )
+
             embedelement = discord.Embed(
                 title="Status Command",
                 description="Changes the Skytec City bot status",
                 color=discord.Color.blue()
             )
-            embedelement.add_field(
-                name="Status changed by {}".format(ctx.message.author.display_name),
-                value="Status changed to type [{}] with message [{}].".format(statustype, message),
-                inline=False
-            )
+
+            if statustype == "streaming":
+                embedelement.add_field(
+                    name="Status changed by {}".format(ctx.message.author.display_name),
+                    value="Status changed to type [{}] with url [{}] with message [{}].".format(statustype, args[0], message),
+                    inline=False
+                )
+            else:
+                embedelement.add_field(
+                    name="Status changed by {}".format(ctx.message.author.display_name),
+                    value="Status changed to type [{}] with message [{}].".format(statustype, message),
+                    inline=False
+                )
+            
             await ctx.channel.send(
                 content=None,
                 embed=embedelement
