@@ -620,23 +620,22 @@ class MainBot:
                                 else:
                                     where = "the server **{}**".format(server.capitalize())
 
-                                if notiftype == "all":
+                                embedelement = discord.Embed(
+                                    title="Notification Command",
+                                    description="Create a player notification",
+                                    color=discord.Color.dark_orange()
+                                )
 
-                                    embedelement = discord.Embed(
-                                        title="Notification Command",
-                                        description="Create a player notification",
-                                        color=discord.Color.dark_orange()
-                                    )
+                                embedelement.add_field(
+                                    name="Notification successfully created",
+                                    value="Notifying {} when **{}** {} {} {}.".format(ctx.message.author.mention, username, when, where, times)
+                                )
 
-                                    embedelement.add_field(
-                                        name="Notification successfully created",
-                                        value="Notifying {} when **{}** {} {} {}.".format(ctx.message.author.mention, username, when, where, times)
-                                    )
-
-                                    await ctx.channel.send(
-                                        content=None,
-                                        embed=embedelement
-                                    )
+                                await ctx.channel.send(
+                                    content=None,
+                                    embed=embedelement
+                                )
+                                
 
                             elif exception == 204:
 
