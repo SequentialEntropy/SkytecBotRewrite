@@ -3,6 +3,8 @@ from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 import asyncio
+import requests
+import json
 
 try:
     import FirebaseConnection
@@ -110,11 +112,76 @@ class FlaskWebserver:
             }
         }
         print("Server updating.")
+        initial = True
+        self.cachedplayerslast = {}
+        self.cachedplayers = {}
+
         while True:
+
+            self.liveplayers = {}
+
             for server in self.servers:
                 self.servers[server]["api"].update()
+                self.liveplayers.update({player: server for player in self.servers[server]["api"].info["players"]["list"]})
                 print("{} Updated".format(server.capitalize()))
-            if self._parent != None:
-                loop = self._parent.event_loop
-                loop.call_soon_threadsafe(asyncio.ensure_future, self._parent.serverupdate())
-            time.sleep(60)
+            self.cache()
+
+            if initial:
+                initial = False
+            else:
+                if self._parent != None and not initial:
+                    loop = self._parent.event_loop
+                    loop.call_soon_threadsafe(asyncio.ensure_future, self._parent.serverupdate())
+                time.sleep(60)
+
+    def cache(self):
+
+        # self.liveplayers = {player:server for server in self.servers for player in self.servers[server]["api"].info["players"]["list"]}
+        # print("\n".join([f"[{self.liveplayers[player]}] - {player}" for player in self.liveplayers]))
+
+        for attempt in range(3):
+            query = {
+                "queryexception": None
+            }
+            try:
+                rawquery = requests.get("https://mcapi.us/server/query?ip=alttd.com")
+                query["queryexception"] = rawquery.status_code
+                if rawquery.status_code == 200:
+                    query.update(json.loads(rawquery.text))
+                    queryplayers = query["players"]["list"]
+                    break
+            except Exception as e:
+                query["queryexception"] = str(e)
+
+        if query["queryexception"] == 200:
+            print("[Query] Success - 200")
+            
+            undefined = set(queryplayers) - set(self.liveplayers)
+
+            print("\nUndefined Players:\n{}\n".format("\n".join([player for player in undefined])))
+
+            self.cachedplayerslast = self.cachedplayers
+            self.cachedplayers = {}
+            for player in queryplayers:
+                if player in self.liveplayers:
+                    self.cachedplayers[player] = self.liveplayers[player]
+                elif player in self.cachedplayerslast:
+                    self.cachedplayers[player] = self.cachedplayerslast[player]
+                    self.servers[self.cachedplayerslast[player]]["api"].info["players"]["cachedlist"][player] = {
+                        "type": ["cached"]
+                    }
+                else:
+                    self.cachedplayers[player] = "lobby"
+                    self.servers["lobby"]["api"].info["players"]["cachedlist"][player] = {
+                        "type": ["cached"]
+                    }
+
+            for server in self.servers:
+                print("\nServer - {}\n\nLive Players:\n{}\n\nCached Players:\n{}\n".format(server, "\n".join([player for player in self.servers[server]["api"].info["players"]["list"]]), "\n".join([player for player in set(self.servers[server]["api"].info["players"]["cachedlist"]) - set(self.servers[server]["api"].info["players"]["list"]) ]) ) )
+
+            print("\nCached and Live Players:\n{}\n".format("\n".join([f"[{self.cachedplayers[player]}] - {player}" for player in self.cachedplayers])))
+
+        else:
+            print("[Query] Error - " + str(query["queryexception"]))
+
+        return

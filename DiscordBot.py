@@ -52,13 +52,15 @@ class MainBot:
         allplayersleft = {}
 
         for server in servers:
-            playerslast = servers[server]["api"].info.get("players", {}).get("list", {})
-            playersnow = servers[server]["api"].infolast.get("players", {}).get("list", {})
+            playerslast = servers[server]["api"].info.get("players", {}).get("cachedlist", {})
+            playersnow = servers[server]["api"].infolast.get("players", {}).get("cachedlist", {})
             playersjoined = set(playerslast) - set(playersnow)
             playersleft = set(playersnow) - set(playerslast)
             allplayers.update({player: server for player in playersnow})
             allplayersjoined.update({player: server for player in playersjoined})
             allplayersleft.update({player: server for player in playersleft})
+
+        popnotifications = []
 
         for notification in self.notifications:
 
@@ -160,11 +162,14 @@ class MainBot:
 
                 if decrement:
                     if self.notifications[notification]["amount"] == 1:
-                        FirebaseConnection.firebasedelete(notification)
-                        self.notifications.pop(notification)
+                        FirebaseConnection.firebasedelete("notifications", notification)
+                        popnotifications.append(notification)
                     elif self.notifications[notification]["amount"] > 1:
                         FirebaseConnection.firebaseincrement("notifications", notification, "amount", -1)
                         self.notifications[notification]["amount"] -= 1
+
+        for notification in popnotifications:
+            self.notifications.pop(notification)
 
     def fetch_notifications(self):
         self.notifications = FirebaseConnection.firebasefetch("notifications")
@@ -329,14 +334,28 @@ class MainBot:
 
         @self.bot.command()
         async def uptime(ctx):
+
+            difference = datetime.datetime.now() - self.startup
+
+            seconds = difference.seconds
+
+            days, seconds = divmod(seconds, 86400)
+            hours, seconds = divmod(seconds, 3600)
+            minutes, seconds = divmod(seconds, 60)
+
             embedelement = discord.Embed(
                 title="Uptime Command",
                 description="Tells uptime information",
                 color=discord.Color.gold()
             )
             embedelement.add_field(
-                name="Skytec City bot startup time",
-                value="Skytec City bot started up on [{}].".format(self.startup.strftime("%b %d %Y %H:%M:%S")),
+                name="Startup Time",
+                value=self.startup.strftime("%b %d %Y %H:%M:%S"),
+                inline=False
+            )
+            embedelement.add_field(
+                name="Time Elapsed",
+                value=f"{days} Days {hours} Hours {seconds} Seconds",
                 inline=False
             )
             await ctx.channel.send(
@@ -420,13 +439,13 @@ class MainBot:
 
                 api = self.flaskserver.servers[server]["api"]
 
-                playeritems = [item for item in api.info["players"]["list"].items()]
+                playeritems = [item for item in api.info["players"]["cachedlist"].items()]
 
                 playerpergroup = 20
 
                 groupedplayers = [{keyvalue[0]:keyvalue[1] for keyvalue in playeritems[group:group + playerpergroup]} for group in range(0, len(playeritems), playerpergroup)]
 
-                if len(api.info["players"]["list"]) == 0:
+                if len(api.info["players"]["cachedlist"]) == 0:
                     
                     if api.info.get("pingexception", None) != 200 or (api.info.get("dynmapexception", None) != 200 and api.dynmapip != False):
                         embedelement = discord.Embed(
@@ -456,7 +475,7 @@ class MainBot:
                         description="Players {} - {} / {}\nPage {} / {}".format(
                             str(pagenumber * playerpergroup + 1),
                             str(pagenumber * playerpergroup + len(group)),
-                            str(len(api.info["players"]["list"])),
+                            str(len(api.info["players"]["cachedlist"])),
                             str(pagenumber + 1),
                             str(len(groupedplayers))
                         ),
@@ -481,7 +500,7 @@ class MainBot:
 
                         embedelement.add_field(
                             name=nick,
-                            value="**Dimension:** {}\n**Position:** {}".format(group[player].get("dimension", "Unable to fetch"), position),
+                            value="**Dimension:** {}\n**Position:** {}".format(group[player].get("dimension", "Unable to fetch - Player not on Dynmap"), position),
                             inline=False
                         )
 

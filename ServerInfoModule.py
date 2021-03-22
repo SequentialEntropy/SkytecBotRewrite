@@ -3,6 +3,7 @@ import json
 import html
 import html2text
 import mcstatus
+import copy
 
 class Server:
     def __init__(self, ip, dynmapip=False, world=False):
@@ -31,48 +32,6 @@ class Server:
                 ping["pingexception"] = e
                 print("[Ping] On updating {}: Error - {}".format(self.ip, e))
 
-        # for attempt in range(3):
-        #     ping = {
-        #         "pingstatuscode": None,
-        #         "pingexception": None
-        #     }
-        #     try:
-        #         rawping = requests.get("https://api.mcsrvstat.us/2/" + self.ip, timeout=5)
-        #         ping["pingstatuscode"] = rawping.status_code
-        #         ping["pingexception"] = rawping.status_code
-        #         if rawping.status_code == 200:
-        #             ping.update(json.loads(rawping.text))
-        #             if not ping.get("online", False):
-        #                 ping["pingexception"] = "Server offline"
-        #             print("[Ping] On updating {}: Success - 200".format(self.ip))
-        #             break
-        #         else:
-        #             print("[Ping] On updating {}: Error - {}".format(self.ip, rawping.status_code))
-        #     except Exception as e:
-        #         ping["pingexception"] = e
-        #         print("[Ping] On updating {}: Error - {}".format(self.ip, e))
-
-        # for attempt in range(3):
-        #     sample = {
-        #         "samplestatuscode": None,
-        #         "sampleexception": None
-        #     }
-        #     try:
-        #         rawsample = requests.get("https://api.mcsrvstat.us/ping/" + self.ip, timeout=5)
-        #         sample["samplestatuscode"] = rawsample.status_code
-        #         sample["sampleexception"] = rawsample.status_code
-        #         if rawsample.status_code == 200:
-        #             sample.update(json.loads(rawsample.text))
-        #             print("[Sample] On updating {}: Success - 200".format(self.ip))
-        #             break
-        #         else:
-        #             print("[Sample] On updating {}: Error - {}".format(self.ip, rawsample.status_code))
-        #     except Exception as e:
-        #         sample["sampleexception"] = e
-        #         print("[Sample] On updating {}: Error - {}".format(self.ip, e))
-        #     if ping["pingexception"] == "Server offline":
-        #         sample["sampleexception"] = "Server offline"
-
         for element in ping:
             if element not in ["players"]:
                 info[element] = ping[element]
@@ -83,7 +42,7 @@ class Server:
         if "description" in ping:
             info["motd"] = {
                 "raw": ping["description"],
-                "decoded": "".join([string.get("text", "") for string in ping["description"].get("extra", [])])
+                "decoded": "".join([string.get("text", "") for string in ping["description"].get("extra", {})])
             }
 
         info["players"] = {
@@ -196,6 +155,8 @@ class Server:
                                     elif element == "desc":
                                         info["warps"][name]["description"] = html.unescape(warps[warp][element]).split("<br />Description: ")[1].replace("<br />", " ")
                                         info["warps"][name]["owner"] = html.unescape(warps[warp][element]).split("<br />Description: ")[0].split("<br />Owner: ")[1]
+
+        info["players"]["cachedlist"] = copy.deepcopy(info["players"]["list"])
 
         self.infolast = self.info
         self.info = info
