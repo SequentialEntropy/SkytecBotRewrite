@@ -355,7 +355,7 @@ class MainBot:
             )
             embedelement.add_field(
                 name="Time Elapsed",
-                value=f"{days} Days {hours} Hours {seconds} Seconds",
+                value=f"{days} Days {hours} Hours {minutes} Minutes {seconds} Seconds",
                 inline=False
             )
             await ctx.channel.send(
