@@ -6,3 +6,5 @@ ServerInfoTest.py
 ServerInfoClass.py
 CacheTest.py
 ToDo.md
+ClaimInfo
+FetchClaims.py

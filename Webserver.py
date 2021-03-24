@@ -84,7 +84,7 @@ class FlaskWebserver:
         self.servers = {
             "lobby": {
                 "api": ServerInfoModule.Server("lobby.alttd.com"),
-                "color": 0x969c9f
+                "color": 0xa9a9b9
             },
             "valley": {
                 "api": ServerInfoModule.Server("valley.alttd.com", "vmap.alttd.com", "115survival"),
@@ -104,11 +104,11 @@ class FlaskWebserver:
             },
             "creative": {
                 "api": ServerInfoModule.Server("creative.alttd.com"),
-                "color": 0x969c9f
+                "color": 0xdd8136
             },
             "events": {
                 "api": ServerInfoModule.Server("events.alttd.com"),
-                "color": 0x969c9f    
+                "color": 0xed3833    
             }
         }
         print("Server updating.")
