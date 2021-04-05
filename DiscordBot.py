@@ -5,7 +5,6 @@ import datetime
 import json
 import asyncio
 import requests
-import json
 
 try:
     from SetEnviron import environ
@@ -43,7 +42,7 @@ class MainBot:
     async def serverupdate(self):
         print("Bot detected project update.")
 
-        channel = self.bot.get_channel(817008411001749555)
+        # channel = self.bot.get_channel(817008411001749555)
 
         servers = self.flaskserver.servers
 
@@ -109,10 +108,15 @@ class MainBot:
 
                     user = await self.bot.fetch_user(self.notifications[notification]["dcuser"])
 
-                    await channel.send(
-                        content=user.mention,
+                    await user.send(
+                        content=None,
                         embed=embedelement
                     )
+
+                    # await channel.send(
+                    #     content=user.mention,
+                    #     embed=embedelement
+                    # )
 
                     decrement = True
 
@@ -131,10 +135,15 @@ class MainBot:
 
                     user = await self.bot.fetch_user(self.notifications[notification]["dcuser"])
 
-                    await channel.send(
-                        content=user.mention,
+                    await user.send(
+                        content=None,
                         embed=embedelement
-                    )          
+                    )
+
+                    # await channel.send(
+                    #     content=user.mention,
+                    #     embed=embedelement
+                    # )          
 
                     decrement = True
                 
@@ -153,10 +162,15 @@ class MainBot:
 
                     user = await self.bot.fetch_user(self.notifications[notification]["dcuser"])
 
-                    await channel.send(
-                        content=user.mention,
+                    await user.send(
+                        content=None,
                         embed=embedelement
-                    )                    
+                    )
+
+                    # await channel.send(
+                    #     content=user.mention,
+                    #     embed=embedelement
+                    # )
 
                     decrement = True
 
@@ -214,6 +228,7 @@ class MainBot:
                 inline=False
             )
             await ctx.channel.send(
+            # await ctx.message.reply(
                 content=None,
                 embed=embedelement
             )
@@ -236,6 +251,14 @@ class MainBot:
             await ctx.channel.send(
                 content=None,
                 embed=embedelement
+            )
+
+        @self.bot.command()
+        async def say(ctx, channelid, *args, **kwargs):
+            channel = self.bot.get_channel(int(channelid))
+            await channel.send(
+                content=" ".join([arg for arg in args]),
+                embed=None
             )
 
         @self.bot.command()
