@@ -455,7 +455,7 @@ class MainBot:
                     value="{} / {}".format(str(api.info["players"].get("online", "Unable to fetch")), str(api.info["players"].get("max", "Unable to fetch")))
                 )
 
-                if api.dynmapip != False:
+                if api.pl3xmapip != False:
                     embedelement.add_field(
                         name="Server Time",
                         value=str(api.info.get("servertime", "Unable to fetch"))
@@ -495,12 +495,12 @@ class MainBot:
 
                 if len(api.info["players"]["cachedlist"]) == 0:
                     
-                    if api.info.get("pingexception", None) != 200 or (api.info.get("dynmapexception", None) != 200 and api.dynmapip != False):
+                    if api.info.get("pingexception", None) != 200 or (api.info.get("pl3xmapexception", None) != 200 and api.pl3xmapip != False):
                         embedelement = discord.Embed(
                             title=server.capitalize(),
-                            description="Unable to fetch Players - Error:\nPing - {}\nDynmap - {}".format(
+                            description="Unable to fetch Players - Error:\nPing - {}\nPl3xmap - {}".format(
                                 str(api.info.get("pingexception", "No error message given")),
-                                str(api.info.get("dynmapexception", "No error message given"))
+                                str(api.info.get("pl3xmapexception", "No error message given"))
                                 ),
                             color=self.flaskserver.servers[server]["color"]
                         )
@@ -539,16 +539,16 @@ class MainBot:
                             nick = player.replace("_", "\_")
 
                         if "dimension" in group[player]:
-                            if group[player]["dimension"] == "Overworld":
-                                position = "(X: {}, Y: {}, Z: {})".format(int(group[player].get("x", "Unable to fetch")), int(group[player].get("y", "Unable to fetch")), int(group[player].get("z", "Unable to fetch")))
+                            if group[player]["dimension"] in ["Overworld", "Nether"]:
+                                position = "(X: {}, Z: {})".format(group[player].get("x", "Unable to fetch"), group[player].get("z", "Unable to fetch"))
                             else:
-                                position = "Unable to fetch - Player not in Overworld"
+                                position = "Unable to fetch - Player in End"
                         else:
-                            position = "Unable to fetch - Player not on Dynmap"
+                            position = "Unable to fetch - Player not on Pl3xmap"
 
                         embedelement.add_field(
                             name=nick,
-                            value="**Dimension:** {}\n**Position:** {}".format(group[player].get("dimension", "Unable to fetch - Player not on Dynmap"), position),
+                            value="**Dimension:** {}\n**Position:** {}".format(group[player].get("dimension", "Unable to fetch - Player not on Pl3xmap"), position),
                             inline=False
                         )
 
@@ -575,7 +575,7 @@ class MainBot:
                 groupedwarps = [{keyvalue[0]:keyvalue[1] for keyvalue in warpitems[group:group + warppergroup]} for group in range(0, len(warpitems), warppergroup)]
                 
                 if len(api.info["warps"]) == 0:
-                    if api.dynmapip != False:
+                    if api.pl3xmapip != False:
                         if api.info.get("markersexception", None) == 200:
                             embedelement = discord.Embed(
                                 title=server.capitalize(),
@@ -624,9 +624,9 @@ class MainBot:
                     for warp in group:
                         embedelement.add_field(
                             name=warp,
-                            value="**Owner:** {}\n**Position:** {}\n**Description:** {}".format(
-                                group[warp].get("owner", "Unable to fetch").replace("_", "\_"),
-                                "(X: {}, Y: {}, Z: {})".format(int(group[warp].get("x", "Unable to fetch")), int(group[warp].get("y", "Unable to fetch")), int(group[warp].get("z", "Unable to fetch"))),
+                            value="**Dimension:** {}\n**Position:** {}\n**Description:** {}".format(
+                                group[warp].get("dimension", "Unable to fetch"),
+                                "(X: {}, Z: {})".format(group[warp].get("x", "Unable to fetch"), group[warp].get("z", "Unable to fetch")),
                                 group[warp].get("description", "Unable to fetch")
                                 ),
                             inline=False
