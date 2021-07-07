@@ -215,6 +215,31 @@ class MainBot:
 
             print("Bot is ready.")
 
+        @self.bot.event
+        async def on_command_error(ctx, error):
+            embedelement = discord.Embed(
+                title="Command Error",
+                description="The command entered raised an error:",
+                color=0x000000
+            )
+            if isinstance(error, commands.CommandNotFound):
+                embedelement.add_field(
+                    name="Command Not Found",
+                    value="The command you entered does not exist\nCheck -help for a list of commands",
+                    inline=False
+                )
+            else:
+                embedelement.add_field(
+                    name="Unexpected Error",
+                    value=error,
+                    inline=False
+                )
+                raise error
+            await ctx.channel.send(
+                content=None,
+                embed=embedelement
+            )
+
         @self.bot.command()
         async def ping(ctx):
             embedelement = discord.Embed(
